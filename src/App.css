@@ -2,37 +2,32 @@
   text-align: center;
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
+* {
+  font-family: 'Courier New', serif;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
+
+/* everything for typewriter title effect */
+.typewriter h1 {
+  font-size: 52px;
+  font-weight: bolder;
+  overflow: hidden;
+  border-right: .12em solid #0000; /* typwriter cursor */
+  white-space: nowrap;
+  margin: 0 auto;
+  /* letter-spacing: .05em; */
+  animation: 
+    typing 3s steps(48, end),
+    blink-caret 1.3s step-end infinite;
+}
+/* typing effect */
+@keyframes typing {
+  from { width: 0 }
+  to { width: 22ch }
 }
 
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
-}
-
-.App-link {
-  color: #61dafb;
-}
-
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+/* typewriter cursor effect */
+@keyframes blink-caret {
+  from, to { border-color: transparent }
+  50% { border-color: #000000; }
 }
