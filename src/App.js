@@ -9,7 +9,7 @@ import MiniQuiz from './pages/mini';
 import Quiz from './pages/quiz';
 import Chunk from './pages/chunk';
 
-function App() {
+export default function App() {
   return (
     <Router>
       <Routes>
@@ -23,5 +23,3 @@ function App() {
     </Router>
   );
 }
-
-export default App;

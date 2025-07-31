@@ -1,7 +1,27 @@
 import { useState } from 'react';
+import { useNavigate, Link, Navigate } from 'react-router-dom';
+
 
 export default function CustomDropdown() {
   const [open, setOpen] = useState(false);
+  const navigate = useNavigate();
+
+
+    const handleFlashcards = () => {
+      navigate('/flashcard');
+    };
+
+    const handleFlashQuiz = () => {
+      navigate('/mini');
+    };
+
+    const handleFullQuiz = () => {
+      navigate('/quiz');
+    };
+
+    const handleMedley = () => {
+      navigate('/chunk');
+    };
 
   return (
     <div style={{ position: 'relative', display: 'inline-block' }}>
@@ -24,10 +44,10 @@ export default function CustomDropdown() {
           gap: '0.5rem',
           zIndex: 1000,
         }}>
-          <button onClick={() => alert('Flashcards')}>Flashcards</button>
-          <button onClick={() => alert('Flash Quiz')}>Flash Quiz</button>
-          <button onClick={() => alert('Full Quiz')}>Full Quiz</button>
-          <button onClick={() => alert('Medley')}>Medley</button>
+          <button onClick={handleFlashcards}>Flashcards</button>
+          <button onClick={handleFlashQuiz}>Flash Quiz</button>
+          <button onClick={handleFullQuiz}>Full Quiz</button>
+          <button onClick={handleMedley}>Medley</button>
         </div>
         
       )}

@@ -1,4 +1,4 @@
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom'; 
 import { useEffect, useState } from 'react';
 import Accordion from 'react-bootstrap/Accordion';
 import Button from 'react-bootstrap/Button';
@@ -9,33 +9,54 @@ import ListItem from '../components/list_item';
 
 
 export default function Dashboard({ listData }) {
-  //const [lists, setLists] = useState([]);
+  const [lists, setLists] = useState([]);
   const [newList, setNewList] = useState('');
   const navigate = useNavigate();
 
 
+  useEffect(() => {
+    // Fetch all lists from your backend
+    fetch('/lists')
+      .then(res => res.json())
+      .then(data => setLists(data))   // Save fetched data into state
+      .catch(err => console.error('Failed to fetch lists', err));
+  }, []);
+
   // create new list
   const handleNew = async () => {
-    // Redirect to edit page with a new list
-    navigate('/edit');
-    const response = await fetch('/api/lists', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name: newList }),
-    });
+    try {
+      const response = await fetch('/lists', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({})
+      });
 
-    if (response.ok) {
-      // Optionally: refetch lists or update state
-      window.location.reload(); // or call a prop like `refreshLists()`
-    } else {
-      console.error('Failed to create list');
+      if (response.ok) {
+        console.log('List created successfully');
+        //const text = await response.text();
+        //console.log('Raw response:', text);
+        const data = await response.json();
+        const listId = data.id; // Assuming the response contains the new list ID
+        const newListName = data.name;
+        console.log('New List ID:', listId);
+        console.log('New List Name:', newListName);
+        // Redirect to edit page after successful creation
+        navigate('/edit', { state: { listName: newListName, listId: listId } });
+      } else {
+        const errorData = await response.json();
+        console.error('Failed to create list:', errorData);
+        alert('Failed to create list. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error creating list:', error);
+      alert('An error occurred while creating the list.');
     }
   };
 
 
   const handleDel = (id) => {
     if (window.confirm('Are you sure you want to delete this list?')) {
-      fetch(`/api/lists/${id}`, {
+      fetch(`/lists/${id}`, {
         method: 'DELETE',
       })
         .then(response => {
@@ -44,9 +65,24 @@ export default function Dashboard({ listData }) {
           }
         })
         .then(() => {
+          window.location.reload();
           console.log(`List with id ${id} deleted`);
         });
     }
+  };
+
+  const handleEdit = (id) => {
+    console.log("id:", id)
+    fetch(`/lists/${id}`)
+      .then(res => {
+        if (!res.ok) throw new Error(`Failed to fetch list: ${res.status}`);
+        return res.json();
+      })
+      .then(data => {
+        const listName = data.name;
+        navigate('/edit', { state: { listName: listName, listId: id } });
+      })
+      .catch(err => console.error('Error fetching list:', err));
   };
 
 
@@ -57,13 +93,9 @@ export default function Dashboard({ listData }) {
   };
 
   const handleStats = (id) => {
+    navigate('/edit');
     // Logic to view stats for the list by id
     console.log(`Viewing stats for list with id ${id}`);
-  };
-
-  const handleEdit = (id) => {
-    // Logic to edit the list by id
-    console.log(`Editing list with id ${id}`);
   };
 
 
@@ -121,6 +153,18 @@ export default function Dashboard({ listData }) {
           />
       ))}
       </div> */}
+
+      {lists.map(list => (
+        <ListItem
+          key={list.id}      // unique key helps React track items efficiently
+          name={list.name}
+          onPractice={() => handlePractice(list.id)}
+          onStats={() => handleStats(list.id)}
+          onEdit={() => handleEdit(list.id)}
+          onDelete={() => handleDel(list.id)}
+        />
+      ))}
+
 
 
       {/* <div style={{ 
@@ -188,7 +232,7 @@ export default function Dashboard({ listData }) {
     </div> */}
 
     {/* add handling for titles that would overlap with buttons (must be dynamic for different screen sizes) */}
-    <div>
+    {/* <div>
       <ListItem
         name="List 1"
         onEdit={() => console.log('Edit List 1')}
@@ -210,7 +254,7 @@ export default function Dashboard({ listData }) {
         onPractice={() => console.log('Practice List 3')}
         onStats={() => console.log('Stats List 3')}
       />
-    </div>
+    </div> */}
 
     </div>
   );
