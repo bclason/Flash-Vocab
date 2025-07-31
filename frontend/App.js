@@ -1,18 +1,16 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Dashboard from '../src/pages/dashboard';
-import Lists from '../src/pages/lists';
 import Edit from '../src/pages/edit';
 import Flashcards from '../src/pages/flashcards';
 import MiniQuiz from '../src/pages/miniquiz';
 import Quiz from '../src/pages/quiz';
 import Chunk from '../src/pages/chunk';
 
-function App() {
+export default function App() {
   return (
     <Router>
       <Routes>
         <Route path="/" element={<Dashboard />} />
-        <Route path="/lists" element={<Lists />} />
         <Route path="/edit" element={<Edit/>} />
         <Route path="/flashcards" element={<Flashcards />} />
         <Route path="/miniquiz" element={<MiniQuiz />} />
@@ -22,5 +20,3 @@ function App() {
     </Router>
   );
 }
-
-export default App;

@@ -2,6 +2,7 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 import sqlite3
 from models import init_db
+import datetime
 
 app = Flask(__name__)
 CORS(app)
@@ -15,19 +16,122 @@ def get_db_connection():
     conn.row_factory = sqlite3.Row
     return conn
 
-@app.route('/cards', methods=['GET'])
-def get_cards():
+
+# get all lists
+@app.route('/lists', methods=['GET'])
+def get_lists():
     conn = get_db_connection()
-    cards = conn.execute('SELECT * FROM cards').fetchall()
+    lists = conn.execute('SELECT * FROM lists').fetchall()
     conn.close()
+
+    return jsonify([dict(lst) for lst in lists])
+
+@app.route('/lists/<int:id>', methods=['GET'])
+def get_list(id):
+    conn = get_db_connection()
+    lst = conn.execute('SELECT * FROM lists WHERE id = ?', (id,)).fetchone()
+    if lst is None:
+        return jsonify({'error': 'List not found'}), 404
+    lst_cards = conn.execute('SELECT * FROM cards WHERE list_id = ?', (id,)).fetchall()
+    conn.close()
+
+    list_data = {
+        'id': lst['id'],
+        'name': lst['name'],
+        'last_used': lst['last_used'],
+        'cards': [
+            {
+                'id': card['id'],
+                'term': card['term'],
+                'translation': card['translation'],
+                'secondary_translation': card['secondary_translation'],
+                'correct_attempts': card['correct_attempts'],
+                'incorrect_attempts': card['incorrect_attempts']
+            }
+            for card in lst_cards
+        ]
+    }
+
+    return jsonify(list_data)
+
+@app.route('/lists', methods=['POST'])
+def create_list():
+    data = request.get_json()
+    name = data.get('name')
+    last_used = (datetime.datetime.now()).timestamp()
+
+    conn = get_db_connection()
+    if not name:
+        cursor = conn.cursor()
+        num_lists = cursor.execute('SELECT COUNT(*) FROM lists').fetchone()[0]
+        name = f'List {num_lists + 1}'
+
+    conn.execute('INSERT INTO lists (name, last_used) VALUES (?, ?)', (name, last_used))
+    conn.commit()
+    conn.close()
+
+    return jsonify({'message': 'List created successfully'}), 201
+
+
+@app.route('/lists/<int:id>', methods=['PUT'])
+def update_list(id):
+    data = request.get_json()
+    name = data.get('name')
+    last_used = (datetime.datetime.now()).timestamp()
+
+    if not name:
+        return jsonify({'error': 'Name is required'}), 400
+
+    conn = get_db_connection()
+    conn.execute('UPDATE lists SET name = ?, last_used = ? WHERE id = ?', (name, last_used, id))
+    conn.commit()
+    conn.close()
+
+    return jsonify({'message': 'List updated successfully'})
+
+
+@app.route('/lists/<int:id>', methods=['DELETE'])
+def delete_list(id):
+    conn = get_db_connection()
+    conn.execute('DELETE FROM lists WHERE id = ?', (id,))
+    conn.commit()
+    conn.close()
+
+    return jsonify({'message': 'List deleted successfully'})
+
+
+@app.route('/lists/<int:list_id>/cards', methods=['GET'])
+def get_cards_by_list(list_id):
+    conn = get_db_connection()
+    cards = conn.execute('SELECT * FROM cards WHERE list_id = ?', (list_id,)).fetchall()
+    conn.close()
+
     return jsonify([dict(card) for card in cards])
 
+
+# do i have to specify the list_id?
+@app.route('/cards/<int:id>', methods=['GET'])
+def get_card(id):
+    conn = get_db_connection()
+    card = conn.execute('SELECT * FROM cards WHERE id = ?', (id,)).fetchone()
+    conn.close()
+
+    if card is None:
+        return jsonify({'error': 'Card not found'}), 404
+
+    return jsonify(dict(card))
+
+
+# without nesting this under lists i need to specify the list_id
 @app.route('/cards', methods=['POST'])
-def add_card():
+def create_card():
     data = request.get_json()
     term = data.get('term')
     translation = data.get('translation')
-    secondary_translation = data.get('secondary_translation')
+    secondary_translation = data.get('secondary_translation', '')
+
+    if not term or not translation:
+        return jsonify({'error': 'Term and translation are required'}), 400
 
     conn = get_db_connection()
     conn.execute(
@@ -37,46 +141,39 @@ def add_card():
     conn.commit()
     conn.close()
 
-    return jsonify({'message': 'Card added successfully'}), 201
+    return jsonify({'message': 'Card created successfully'}), 201
 
-@app.route('/cards/<int:card_id>', methods=['PUT'])
-def update_card(card_id):
+
+# keeping this seperate from lists should be fine because each card has a unique id
+@app.route('/cards/<int:id>', methods=['PUT'])
+def update_card(id):
     data = request.get_json()
+    term = data.get('term')
+    translation = data.get('translation')
+    secondary_translation = data.get('secondary_translation', '')
 
-    fields = []
-    values = []
-
-    for field in ['term', 'translation', 'secondary_translation', 'correct_attempts', 'incorrect_attempts']:
-        if field in data:
-            fields.append(f"{field} = ?")
-            values.append(data[field])
-
-    if not fields:
-        return jsonify({'error': 'No valid fields to update'}), 400
-
-    values.append(card_id)  # for WHERE clause
-
-    sql = f"UPDATE cards SET {', '.join(fields)} WHERE id = ?"
+    if not term or not translation:
+        return jsonify({'error': 'Term and translation are required'}), 400
 
     conn = get_db_connection()
-    conn.execute(sql, values)
+    conn.execute(
+        'UPDATE cards SET term = ?, translation = ?, secondary_translation = ? WHERE id = ?',
+        (term, translation, secondary_translation, id)
+    )
     conn.commit()
     conn.close()
 
     return jsonify({'message': 'Card updated successfully'})
 
-@app.route('/cards/<int:card_id>', methods=['DELETE'])
-def delete_card(card_id):
+
+@app.route('/cards/<int:id>', methods=['DELETE'])
+def delete_card(id):
     conn = get_db_connection()
-    conn.exectue('DELETE FROM cards WHERE id = ?', (card_id,))
+    conn.execute('DELETE FROM cards WHERE id = ?', (id,))
     conn.commit()
     conn.close()
 
     return jsonify({'message': 'Card deleted successfully'})
-
-    
-
-    
 
 
 if __name__ == '__main__':

@@ -3,7 +3,6 @@ import './App.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
 import Dashboard from './pages/dashboard';
-import Lists from './pages/lists';
 import Edit from './pages/edit';
 import Flashcards from './pages/flashcard';
 import MiniQuiz from './pages/mini';
@@ -15,7 +14,6 @@ function App() {
     <Router>
       <Routes>
         <Route path="/" element={<Dashboard />} />
-        <Route path="/lists" element={<Lists />} />
         <Route path="/edit" element={<Edit/>} />
         <Route path="/flashcards" element={<Flashcards />} />
         <Route path="/miniquiz" element={<MiniQuiz />} />
