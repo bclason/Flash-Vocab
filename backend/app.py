@@ -143,17 +143,15 @@ def get_card(id):
 @app.route('/cards', methods=['POST'])
 def create_card():
     data = request.get_json()
-    term = data.get('term')
-    translation = data.get('translation')
-    secondary_translation = data.get('secondary_translation', '')
+    list_id = data.get('list_id')
 
-    if not term or not translation:
-        return jsonify({'error': 'Term and translation are required'}), 400
+    if not list_id:
+        return jsonify({'error': 'List ID is required'}), 400
 
     conn = get_db_connection()
     conn.execute(
-        'INSERT INTO cards (term, translation, secondary_translation) VALUES (?, ?, ?)',
-        (term, translation, secondary_translation)
+        'INSERT INTO cards (list_id) VALUES (?)',
+        (list_id,)
     )
     conn.commit()
     conn.close()

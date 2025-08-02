@@ -14,17 +14,30 @@ def init_db():
     ''')
 
     # create cards/vocab table
+    # c.execute('''
+    # CREATE TABLE IF NOT EXISTS cards (
+    #     id INTEGER PRIMARY KEY AUTOINCREMENT,
+    #     list_id INTEGER NOT NULL,
+    #     term TEXT DEFAULT '',
+    #     translation TEXT DEFAULT '',
+    #     secondary_translation TEXT DEFAULT '',
+    #     correct_attempts INTEGER DEFAULT 0,
+    #     total_attempts INTEGER DEFAULT 0,
+    #     FOREIGN KEY (list_id) REFERENCES lists(id) ON DELETE CASCADE         
+    # )
+    # ''')
+    c.execute('DROP TABLE IF EXISTS cards')
     c.execute('''
-    CREATE TABLE IF NOT EXISTS cards (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        list_id INTEGER NOT NULL,
-        term TEXT NOT NULL,
-        translation TEXT NOT NULL,
-        secondary_translation TEXT DEFAULT '',
-        correct_attempts INTEGER DEFAULT 0,
-        incorrect_attempts INGTEGER DEFAULT 0,
-        FOREIGN KEY (list_id) REFERENCES lists(id) ON DELETE CASCADE         
-    )
+        CREATE TABLE cards (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            list_id INTEGER NOT NULL,
+            term TEXT DEFAULT '',
+            translation TEXT DEFAULT '',
+            secondary_translation TEXT DEFAULT '',
+            correct_attempts INTEGER DEFAULT 0,
+            total_attempts INTEGER DEFAULT 0,
+            FOREIGN KEY (list_id) REFERENCES lists(id) ON DELETE CASCADE
+        )
     ''')
 
     conn.commit()

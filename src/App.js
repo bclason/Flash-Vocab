@@ -4,7 +4,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 
 import Dashboard from './pages/dashboard';
 import Edit from './pages/edit';
-import Flashcards from './pages/flashcard';
+import Flashcards from './pages/flashcards';
 import MiniQuiz from './pages/mini';
 import Quiz from './pages/quiz';
 import Chunk from './pages/chunk';

@@ -22,6 +22,7 @@ export default function Dashboard({ listData }) {
       .catch(err => console.error('Failed to fetch lists', err));
   }, []);
 
+
   // create new list
   const handleNew = async () => {
     try {
@@ -33,13 +34,11 @@ export default function Dashboard({ listData }) {
 
       if (response.ok) {
         console.log('List created successfully');
-        //const text = await response.text();
-        //console.log('Raw response:', text);
         const data = await response.json();
-        const listId = data.id; // Assuming the response contains the new list ID
+        const listId = data.id; 
         const newListName = data.name;
-        console.log('New List ID:', listId);
-        console.log('New List Name:', newListName);
+        // console.log('New List ID:', listId);
+        // console.log('New List Name:', newListName);
         // Redirect to edit page after successful creation
         navigate('/edit', { state: { listName: newListName, listId: listId } });
       } else {
@@ -70,6 +69,7 @@ export default function Dashboard({ listData }) {
         });
     }
   };
+
 
   const handleEdit = (id) => {
     console.log("id:", id)
@@ -139,70 +139,18 @@ export default function Dashboard({ listData }) {
       </div>
 
       {/* Lists */}
-      {/* <div>
-      {listData
-        .sort((a, b) => new Date(b.lastUsed) - new Date(a.lastUsed))  // recent first
-        .map(list => (
-          <ListItem
-            key={list.id}
-            name={list.name}
-            onPractice={() => handlePractice(list.id)}
-            onStats={() => handleStats(list.id)}
-            onEdit={() => handleEdit(list.id)}
-            onDelete={() => handleDel(list.id)}
-          />
-      ))}
-      </div> */}
-
-      {lists.map(list => (
+      {[...lists]
+      .sort((a, b) => b.last_used - a.last_used)
+      .map(list => (
         <ListItem
-          key={list.id}      // unique key helps React track items efficiently
+          key={list.id}
           name={list.name}
           onPractice={() => handlePractice(list.id)}
           onStats={() => handleStats(list.id)}
           onEdit={() => handleEdit(list.id)}
           onDelete={() => handleDel(list.id)}
         />
-      ))}
-
-
-
-      {/* <div style={{ 
-        textAlign: 'center',
-        padding: '2rem',
-       }}>
-      <DropdownButton
-        id="dropdown-button-large"
-        size="lg"
-        variant="primary"
-        title="Practice"
-      >
-        
-        <Dropdown.Item eventKey="4">Add List</Dropdown.Item>
-        <Dropdown.Divider />
-        <Dropdown.Item eventKey="1">List 1</Dropdown.Item>
-        <Dropdown.Item eventKey="2">List 2</Dropdown.Item>
-        <Dropdown.Item eventKey="3">List 3</Dropdown.Item>
-      </DropdownButton>
-      </div>
-
-
-      <div style={{ 
-        textAlign: 'center',
-       }}>
-      <DropdownButton
-        id="dropdown-button-large"
-        size="lg"
-        variant="primary"
-        title="Lists"
-      >
-        <Dropdown.Item eventKey="4">Add List</Dropdown.Item>
-        <Dropdown.Divider />
-        <Dropdown.Item eventKey="1">List 1</Dropdown.Item>
-        <Dropdown.Item eventKey="2">List 2</Dropdown.Item>
-        <Dropdown.Item eventKey="3">List 3</Dropdown.Item>
-      </DropdownButton>
-      </div> */}
+    ))}
 
 
       {/* <div style={{
@@ -230,32 +178,7 @@ export default function Dashboard({ listData }) {
           </Accordion.Item>
         </Accordion>
     </div> */}
-
-    {/* add handling for titles that would overlap with buttons (must be dynamic for different screen sizes) */}
-    {/* <div>
-      <ListItem
-        name="List 1"
-        onEdit={() => console.log('Edit List 1')}
-        onDelete={() => console.log('Delete List 1')}
-        onPractice={() => console.log('Practice List 1')}
-        onStats={() => console.log('Stats List 1')}
-      />
-      <ListItem
-        name="List 2"
-        onEdit={() => console.log('Edit List 2')}
-        onDelete={() => console.log('Delete List 2')}
-        onPractice={() => console.log('Practice List 2')}
-        onStats={() => console.log('Stats List 2')}
-      />
-      <ListItem
-        name="List 3"
-        onEdit={() => console.log('Edit List 3')}
-        onDelete={() => console.log('Delete List 3')}
-        onPractice={() => console.log('Practice List 3')}
-        onStats={() => console.log('Stats List 3')}
-      />
-    </div> */}
-
+    
     </div>
   );
 }

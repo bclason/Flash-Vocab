@@ -9,10 +9,10 @@ export default function ListItem({ name, onEdit, onDelete, onPractice, onStats }
         <div className="list-item" style={{ display: 'flex', alignItems: 'center', padding: '1rem', border: '4px solid #000' }}>
           <h3 style={{ flex: 1 }}>{name}</h3>
           <div style={{ display: 'flex', gap: '0.6rem', fontSize: '1.2rem', boxSizing: 'border-box' }}>
-            <button onClick={onDelete}>Delete</button>
             <CustomDropdown />
             <button onClick={onEdit}>Edit</button>
             <button onClick={onStats}>Stats</button>
+            <button style={{ color: 'red' }} onClick={onDelete}>Delete</button>
           </div>
         </div>
     </div>

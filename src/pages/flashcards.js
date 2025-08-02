@@ -3,13 +3,13 @@ import { useState } from 'react';
 
 
 
-export default function Chunk() {
+export default function Flashcards() {
   const navigate = useNavigate();
 
 
   return (
     <div>
-      <h1>Chunk Page</h1>
+      <h1>Flashcard Page</h1>
       {/* Home button */}
       <div style={{
         display: 'flex',
