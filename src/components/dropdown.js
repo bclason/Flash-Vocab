@@ -8,7 +8,7 @@ export default function CustomDropdown() {
 
 
     const handleFlashcards = () => {
-      navigate('/flashcard');
+      navigate('/flashcards');
     };
 
     const handleFlashQuiz = () => {

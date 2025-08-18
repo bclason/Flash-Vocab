@@ -1,7 +1,7 @@
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import NewCard from '../components/new_card';
-import { Card } from 'react-bootstrap';
+//import { Card } from 'react-bootstrap';
 
 
 
@@ -17,11 +17,11 @@ export default function Edit() {
 
   useEffect(() => {
     // Fetch all cards from your backend
-    fetch('/cards')
+    fetch(`lists/${listId}/cards`)
       .then(res => res.json())
       .then(data => setCards(data))   // Save fetched data into state
       .catch(err => console.error('Failed to fetch cards', err));
-  }, []);
+  }, [listId]);
 
 
   const handleUpdateList = (event) => {
@@ -57,7 +57,11 @@ export default function Edit() {
 
       if (response.ok) {
         const newCard = await response.json();
-        setCards([...cards, newCard]);
+        setCards(prevCards => {
+          const updated = [...prevCards, newCard];
+          //console.log("Cards state:", updated.map(c => ({ id: c.id, ...c })));
+          return updated;
+        });
       } else {
         console.error('Failed to create new card');
       }
@@ -66,9 +70,28 @@ export default function Edit() {
     }
   };
 
+  const updateCard = async (cardId, field, value) => {
+    setCards(prev =>
+      prev.map(c => c.id === cardId ? { ...c, [field]: value } : c)
+    )
+    console.log("Cards state:", cards.map(c => ({ id: c.id, ...c })));
+    const response = await fetch(`/cards/${cardId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ field, value })
+    });
+    //console.log("Updating card:", { cardId, field, value });
+    if (response.ok) {
+      setCards(prev => prev.map(c => c.id === cardId ? { ...c, [field]: value } : c));
+      console.log('Card updated successfully');
+    } else {
+      console.error('Failed to update card');
+    }
+  };
+
 
   const handleDeleteCard = async (cardId) => {
-    if (window.confirm('Are you sure you want to delete this card?')) {
+    //if (window.confirm('Are you sure you want to delete this card?')) {
       try {
         const response = await fetch(`/cards/${cardId}`, {
           method: 'DELETE',
@@ -85,7 +108,7 @@ export default function Edit() {
         console.error('Error deleting card:', error);
         alert('An error occurred while deleting the card.');
       }
-    }
+    //}
   };
   
 
@@ -134,11 +157,15 @@ export default function Edit() {
 
 
       {/* Cards */}
-      <div>
+      <div style={{ 
+            padding: '1rem',  
+          }}>
         {/* Render all cards */}
         {cards.map(card => (
           <NewCard 
-            key={card.id}
+            key={card.id} 
+            card={card}
+            onFieldChange={updateCard}
             accuracy={card.correct_attempts / (card.total_attempts || 1)} // Calculate accuracy
             onDelete={() => handleDeleteCard(card.id)}  // ← Use card.id from the map
           />

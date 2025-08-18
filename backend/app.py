@@ -139,7 +139,6 @@ def get_card(id):
     return jsonify(dict(card))
 
 
-# without nesting this under lists i need to specify the list_id
 @app.route('/cards', methods=['POST'])
 def create_card():
     data = request.get_json()
@@ -149,36 +148,43 @@ def create_card():
         return jsonify({'error': 'List ID is required'}), 400
 
     conn = get_db_connection()
-    conn.execute(
+    cursor = conn.cursor()
+
+    cursor.execute(
         'INSERT INTO cards (list_id) VALUES (?)',
         (list_id,)
     )
+    card_id = cursor.lastrowid
+
+    # Fetch the full card data so the frontend gets all fields
+    card = conn.execute(
+        'SELECT * FROM cards WHERE id = ?',
+        (card_id,)
+    ).fetchone()
+
     conn.commit()
     conn.close()
 
-    return jsonify({'message': 'Card created successfully'}), 201
+    return jsonify(dict(card)), 201
 
 
-# keeping this seperate from lists should be fine because each card has a unique id
 @app.route('/cards/<int:id>', methods=['PUT'])
 def update_card(id):
     data = request.get_json()
-    term = data.get('term')
-    translation = data.get('translation')
-    secondary_translation = data.get('secondary_translation', '')
+    field = data.get('field')
+    value = data.get('value')
 
-    if not term or not translation:
-        return jsonify({'error': 'Term and translation are required'}), 400
+    allowed_fields = ['term', 'translation', 'secondary_translation']
+    if field not in allowed_fields:
+        return jsonify({'error': 'Invalid field'}), 400
 
+    query = f"UPDATE cards SET {field} = ? WHERE id = ?"
     conn = get_db_connection()
-    conn.execute(
-        'UPDATE cards SET term = ?, translation = ?, secondary_translation = ? WHERE id = ?',
-        (term, translation, secondary_translation, id)
-    )
+    conn.execute(query, (value, id))
     conn.commit()
     conn.close()
 
-    return jsonify({'message': 'Card updated successfully'})
+    return jsonify({'success': True})
 
 
 @app.route('/cards/<int:id>', methods=['DELETE'])

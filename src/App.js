@@ -16,7 +16,7 @@ export default function App() {
         <Route path="/" element={<Dashboard />} />
         <Route path="/edit" element={<Edit/>} />
         <Route path="/flashcards" element={<Flashcards />} />
-        <Route path="/miniquiz" element={<MiniQuiz />} />
+        <Route path="/mini" element={<MiniQuiz />} />
         <Route path="/quiz" element={<Quiz />} />
         <Route path="/chunk" element={<Chunk />} />
       </Routes>

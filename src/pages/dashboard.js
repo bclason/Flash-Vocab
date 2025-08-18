@@ -151,34 +151,6 @@ export default function Dashboard({ listData }) {
           onDelete={() => handleDel(list.id)}
         />
     ))}
-
-
-      {/* <div style={{
-        textAlign: 'center',
-        padding: '2rem',
-      }}>
-        <Accordion defaultActiveKey="0">
-          <Accordion.Item eventKey="0">
-            <Accordion.Header>Practice</Accordion.Header>
-            <Accordion.Body>
-              <Stack direction="horizontal" gap={3}>
-                <Button variant="primary" size="lg">Start Flashcards</Button>
-                <Button variant="secondary" size="lg">Edit Flashcards</Button>
-              </Stack>
-            </Accordion.Body>
-          </Accordion.Item>
-          <Accordion.Item eventKey="1">
-            <Accordion.Header>Lists</Accordion.Header>
-            <Accordion.Body>
-              <Stack direction="horizontal" gap={3}>
-                <Button variant="primary" size="lg">Start Mini Quiz</Button>
-                <Button variant="secondary" size="lg">Edit Mini Quiz</Button>
-              </Stack>
-            </Accordion.Body>
-          </Accordion.Item>
-        </Accordion>
-    </div> */}
-    
     </div>
   );
 }
