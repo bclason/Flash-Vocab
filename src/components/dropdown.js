@@ -12,7 +12,7 @@ export default function CustomDropdown({ listId, listName }) {
     };
 
     const handleFlashQuiz = () => {
-      navigate('/mini');
+      navigate('/mini', { state: { listName: listName, listId: listId } });
     };
 
     const handleFullQuiz = () => {

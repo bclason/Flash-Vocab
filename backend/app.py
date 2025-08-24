@@ -27,34 +27,7 @@ def get_lists():
 
     return jsonify([dict(lst) for lst in lists])
 
-# old one
-# @app.route('/lists/<int:id>', methods=['GET'])
-# def get_list(id):
-#     conn = get_db_connection()
-#     lst = conn.execute('SELECT * FROM lists WHERE id = ?', (id,)).fetchone()
-#     if lst is None:
-#         return jsonify({'error': 'List not found'}), 404
-#     lst_cards = conn.execute('SELECT * FROM cards WHERE list_id = ?', (id,)).fetchall()
-#     conn.close()
 
-#     list_data = {
-#         'id': lst['id'],
-#         'name': lst['name'],
-#         'last_used': lst['last_used'],
-#         'cards': [
-#             {
-#                 'id': card['id'],
-#                 'term': card['term'],
-#                 'translation': card['translation'],
-#                 'secondary_translation': card['secondary_translation'],
-#                 'correct_attempts': card['correct_attempts'],
-#                 'incorrect_attempts': card['incorrect_attempts']
-#             }
-#             for card in lst_cards
-#         ]
-#     }
-
-#     return jsonify(list_data)
 
 @app.route('/lists/<int:id>', methods=['GET'])
 def get_list(id):

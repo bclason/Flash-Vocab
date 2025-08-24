@@ -32,7 +32,7 @@ export default function Quiz() {
         new_correct = card.correct_attempts + 1;
       }
       new_total = card.total_attempts + 1;
-      console.log(`Card ID: ${card.id}, Correct: ${new_correct}, Total: ${new_total}`);
+      // console.log(`Card ID: ${card.id}, Correct: ${new_correct}, Total: ${new_total}`);
 
       fetch(`/cards/${card.id}`, {
         method: 'PUT',
