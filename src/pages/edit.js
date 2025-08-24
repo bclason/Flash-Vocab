@@ -32,13 +32,11 @@ export default function Edit() {
   // update list name
   const handleSubmit = async (event) => {
     event.preventDefault();
-
     const response = await fetch(`/lists/${listId}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({name: textEntry}),
     });
-
     if (response.ok) {
       console.log('List name updated successfully');
     } else {
@@ -69,6 +67,7 @@ export default function Edit() {
       console.error('Error creating new card:', error);
     }
   };
+  
 
   const updateCard = async (cardId, field, value) => {
     setCards(prev =>
@@ -166,7 +165,7 @@ export default function Edit() {
             key={card.id} 
             card={card}
             onFieldChange={updateCard}
-            accuracy={card.correct_attempts / (card.total_attempts || 1)} // Calculate accuracy
+            accuracy={(card.correct_attempts / (card.total_attempts || 1)) * 100} // Calculate accuracy as raw percentage number
             onDelete={() => handleDeleteCard(card.id)}  // ← Use card.id from the map
           />
         ))}

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate, Link, Navigate } from 'react-router-dom';
 
 
-export default function CustomDropdown() {
+export default function CustomDropdown({ listId, listName }) {
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
 
@@ -16,7 +16,7 @@ export default function CustomDropdown() {
     };
 
     const handleFullQuiz = () => {
-      navigate('/quiz');
+      navigate('/quiz', { state: { listName: listName, listId: listId } });
     };
 
     const handleMedley = () => {

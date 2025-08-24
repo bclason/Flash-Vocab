@@ -139,6 +139,7 @@ def get_card(id):
     return jsonify(dict(card))
 
 
+# without nesting this under lists i need to specify the list_id
 @app.route('/cards', methods=['POST'])
 def create_card():
     data = request.get_json()
@@ -148,43 +149,48 @@ def create_card():
         return jsonify({'error': 'List ID is required'}), 400
 
     conn = get_db_connection()
-    cursor = conn.cursor()
-
-    cursor.execute(
+    conn.execute(
         'INSERT INTO cards (list_id) VALUES (?)',
         (list_id,)
     )
-    card_id = cursor.lastrowid
-
-    # Fetch the full card data so the frontend gets all fields
-    card = conn.execute(
-        'SELECT * FROM cards WHERE id = ?',
-        (card_id,)
-    ).fetchone()
-
     conn.commit()
     conn.close()
 
-    return jsonify(dict(card)), 201
+    return jsonify({'message': 'Card created successfully'}), 201
 
 
+# keeping this seperate from lists should be fine because each card has a unique id
 @app.route('/cards/<int:id>', methods=['PUT'])
 def update_card(id):
     data = request.get_json()
-    field = data.get('field')
-    value = data.get('value')
+    term = data.get('term')
+    translation = data.get('translation')
+    secondary_translation = data.get('secondary_translation', '')
+    correct_attempts = data.get('correct_attempts')
+    total_attempts = data.get('total_attempts')
 
-    allowed_fields = ['term', 'translation', 'secondary_translation']
-    if field not in allowed_fields:
-        return jsonify({'error': 'Invalid field'}), 400
-
-    query = f"UPDATE cards SET {field} = ? WHERE id = ?"
     conn = get_db_connection()
-    conn.execute(query, (value, id))
+    
+    # Handle accuracy updates
+    if correct_attempts is not None and total_attempts is not None:
+        conn.execute(
+            'UPDATE cards SET correct_attempts = ?, total_attempts = ? WHERE id = ?',
+            (correct_attempts, total_attempts, id)
+        )
+    # Handle card content updates
+    elif term and translation:
+        conn.execute(
+            'UPDATE cards SET term = ?, translation = ?, secondary_translation = ? WHERE id = ?',
+            (term, translation, secondary_translation, id)
+        )
+    else:
+        conn.close()
+        return jsonify({'error': 'Invalid update data'}), 400
+    
     conn.commit()
     conn.close()
 
-    return jsonify({'success': True})
+    return jsonify({'message': 'Card updated successfully'})
 
 
 @app.route('/cards/<int:id>', methods=['DELETE'])

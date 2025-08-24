@@ -1,8 +1,5 @@
 import { useNavigate } from 'react-router-dom'; 
 import { useEffect, useState } from 'react';
-import Accordion from 'react-bootstrap/Accordion';
-import Button from 'react-bootstrap/Button';
-import Stack from 'react-bootstrap/Stack';
 import ListItem from '../components/list_item';
 
 
@@ -37,9 +34,6 @@ export default function Dashboard({ listData }) {
         const data = await response.json();
         const listId = data.id; 
         const newListName = data.name;
-        // console.log('New List ID:', listId);
-        // console.log('New List Name:', newListName);
-        // Redirect to edit page after successful creation
         navigate('/edit', { state: { listName: newListName, listId: listId } });
       } else {
         const errorData = await response.json();
@@ -87,10 +81,10 @@ export default function Dashboard({ listData }) {
 
 
   // will be handled by dropdown button
-  const handlePractice = (id) => {
-    // Logic to start practicing the list by id
-    console.log(`Starting practice for list with id ${id}`);
-  };
+  // const handlePractice = (id) => {
+  //   // Logic to start practicing the list by id
+  //   console.log(`Starting practice for list with id ${id}`);
+  // };
 
   const handleStats = (id) => {
     navigate('/edit');
@@ -144,8 +138,8 @@ export default function Dashboard({ listData }) {
       .map(list => (
         <ListItem
           key={list.id}
-          name={list.name}
-          onPractice={() => handlePractice(list.id)}
+          listId={list.id}
+          listName={list.name}
           onStats={() => handleStats(list.id)}
           onEdit={() => handleEdit(list.id)}
           onDelete={() => handleDel(list.id)}
