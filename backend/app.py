@@ -122,20 +122,28 @@ def create_card():
         return jsonify({'error': 'List ID is required'}), 400
 
     conn = get_db_connection()
-    conn.execute(
+    cursor = conn.cursor()
+    cursor.execute(
         'INSERT INTO cards (list_id) VALUES (?)',
         (list_id,)
     )
     conn.commit()
+    new_id = cursor.lastrowid
     conn.close()
 
-    return jsonify({'message': 'Card created successfully'}), 201
+    return jsonify({'id': new_id, 'list_id': list_id}), 201
 
 
 # keeping this seperate from lists should be fine because each card has a unique id
 @app.route('/cards/<int:id>', methods=['PUT'])
 def update_card(id):
     data = request.get_json()
+    
+    # Handle field-value format (from edit page)
+    field = data.get('field')
+    value = data.get('value')
+    
+    # Handle direct field format (from accuracy updates)
     term = data.get('term')
     translation = data.get('translation')
     secondary_translation = data.get('secondary_translation', '')
@@ -150,7 +158,16 @@ def update_card(id):
             'UPDATE cards SET correct_attempts = ?, total_attempts = ? WHERE id = ?',
             (correct_attempts, total_attempts, id)
         )
-    # Handle card content updates
+    # Handle single field updates (field-value format)
+    elif field and value is not None:
+        allowed_fields = ['term', 'translation', 'secondary_translation']
+        if field not in allowed_fields:
+            conn.close()
+            return jsonify({'error': f'Invalid field: {field}'}), 400
+        
+        query = f"UPDATE cards SET {field} = ? WHERE id = ?"
+        conn.execute(query, (value, id))
+    # Handle direct field updates (for backward compatibility)
     elif term and translation:
         conn.execute(
             'UPDATE cards SET term = ?, translation = ?, secondary_translation = ? WHERE id = ?',
@@ -158,7 +175,7 @@ def update_card(id):
         )
     else:
         conn.close()
-        return jsonify({'error': 'Invalid update data'}), 400
+        return jsonify({'error': 'Invalid update data - missing required fields'}), 400
     
     conn.commit()
     conn.close()
@@ -174,6 +191,19 @@ def delete_card(id):
     conn.close()
 
     return jsonify({'message': 'Card deleted successfully'})
+
+
+@app.route('/lists/<int:list_id>/reset-accuracy', methods=['PUT'])
+def reset_list_accuracy(list_id):
+    conn = get_db_connection()
+    conn.execute(
+        'UPDATE cards SET correct_attempts = 0, total_attempts = 0 WHERE list_id = ?', 
+        (list_id,)
+    )
+    conn.commit()
+    conn.close()
+
+    return jsonify({'message': 'All card accuracies reset successfully'})
 
 
 if __name__ == '__main__':

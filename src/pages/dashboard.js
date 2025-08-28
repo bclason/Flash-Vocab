@@ -6,9 +6,8 @@ import ListItem from '../components/list_item';
 // TODO: add functionality to reverse term and def (answer with term)
 // also add functionality to practice only a subset of cards (likely have to have a screen before quiz)
 
-export default function Dashboard({ listData }) {
+export default function Dashboard() {
   const [lists, setLists] = useState([]);
-  const [newList, setNewList] = useState('');
   const navigate = useNavigate();
 
 

@@ -5,8 +5,7 @@ import incorrectSound from '../components/incorrect.mp3';
 
 
 // TODO: 
-// add accuracy changes
-// add functionality to reverse term and def (answer with term)
+// not updating accuracy correctly
 // also add functionality to practice only a subset of cards (likely have to have a screen before quiz)
 // checking for lowercase 
 
@@ -14,6 +13,7 @@ import incorrectSound from '../components/incorrect.mp3';
 export default function MiniQuiz() {
   const navigate = useNavigate();
   const [cards, setCards] = useState([]);
+  const [remainingCards, setRemainingCards] = useState([]); // Cards that haven't been done yet
 
   const [answer, setAnswer] = useState('');
   const [currentTerm, setCurrentTerm] = useState(null);
@@ -23,43 +23,119 @@ export default function MiniQuiz() {
   const listId = state?.listId;
   const listName = state?.listName;
 
+  const [isReversed, setIsReversed] = useState(false);
+
   useEffect(() => {
     // Fetch all cards from your backend
     fetch(`lists/${listId}/cards`)
       .then(res => res.json())
-      .then(data => setCards(data))   // Save fetched data into state
+      .then(data => {
+        setCards(data);
+        setRemainingCards([...data]); // Initialize remaining cards with all cards
+      })
       .catch(err => console.error('Failed to fetch cards', err));
   }, [listId]);
 
   useEffect(() => {
-    if (cards.length > 0) {
+    if (remainingCards.length > 0) {
+      getRandomTerm();
+    } else if (cards.length > 0) {
+      // All cards completed - show completion message or restart
+      alert(`Congratulations! You've completed all ${cards.length} terms!`);
+      setRemainingCards([...cards]); // Reset for another round
       getRandomTerm();
     }
-  }, [cards]);
+  }, [remainingCards]);
 
 
   const getRandomTerm = () => {
-    const randomIndex = Math.floor(Math.random() * cards.length);
-    setCurrentTerm(cards[randomIndex]);
+    if (remainingCards.length === 0) return;
+    const randomIndex = Math.floor(Math.random() * remainingCards.length);
+    const selectedCard = remainingCards[randomIndex];
+    
+    // Find the most up-to-date version of this card from the cards array
+    setCards(currentCards => {
+      const upToDateCard = currentCards.find(card => card.id === selectedCard.id);
+      setCurrentTerm(upToDateCard || selectedCard);
+      return currentCards; // Return unchanged cards array
+    });
   }
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (answer === currentTerm.translation || answer === currentTerm.secondary_translation) {
+    const correctAnswer = isReversed ? currentTerm.term : currentTerm.translation;
+    const secondaryAnswer = isReversed ? '' : currentTerm.secondary_translation;
+    
+    // Check if answer matches correct answer or secondary translation
+    if (answer === correctAnswer || (secondaryAnswer && answer === secondaryAnswer)) {
       new Audio(correctSound).play();
       setStatus('correct');
       setTimeout(() => {
         setAnswer('');
-        getRandomTerm();
+        setRemainingCards(prev => prev.filter(card => card.id !== currentTerm.id));
         setStatus(null);
-      }, 500);
+      }, 300);
+      updateAccuracy(true);
+      // console.log(currentTerm.correct_attempts);
+      // console.log(currentTerm.total_attempts);
     } else {
+      // incorrect
       new Audio(incorrectSound).play();
       setStatus('incorrect');
       setTimeout(() => {
+        alert(`Incorrect! The correct answer was: ${correctAnswer}`);
+      }, 300);
+      setTimeout(() => {
         setAnswer('');
-      }, 500);
+        getRandomTerm(); // Try the same term again or get a new one
+        setStatus(null);
+      }, 300);
+      updateAccuracy(false);
+      // console.log(currentTerm.correct_attempts);
+      // console.log(currentTerm.total_attempts);
     }
+  }
+
+  const updateAccuracy = (correct) => {
+    // Use functional state update to get the most current values
+    setCurrentTerm(prevTerm => {
+      const new_correct = correct ? prevTerm.correct_attempts + 1 : prevTerm.correct_attempts;
+      const new_total = prevTerm.total_attempts + 1;
+      
+      console.log(`BEFORE: correct_attempts=${prevTerm.correct_attempts}, total_attempts=${prevTerm.total_attempts}`);
+      console.log(`CALCULATING: correct=${correct}, new_correct=${new_correct}, new_total=${new_total}`);
+      
+      // Update the database
+      fetch(`/cards/${prevTerm.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ correct_attempts: new_correct, total_attempts: new_total }),
+      })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Failed to update accuracy');
+        }
+        console.log(`DATABASE UPDATED: correct_attempts=${new_correct}, total_attempts=${new_total}`);
+      })
+      .catch(error => console.error('Error updating accuracy:', error));
+
+      // Also update the cards array
+      setCards(prev => prev.map(card => 
+        card.id === prevTerm.id 
+          ? { ...card, correct_attempts: new_correct, total_attempts: new_total }
+          : card
+      ));
+
+      // Return the updated current term
+      const updatedTerm = {
+        ...prevTerm,
+        correct_attempts: new_correct,
+        total_attempts: new_total
+      };
+      
+      console.log(`AFTER STATE UPDATE: correct_attempts=${updatedTerm.correct_attempts}, total_attempts=${updatedTerm.total_attempts}`);
+      return updatedTerm;
+    });
   }
 
   return (
@@ -93,7 +169,7 @@ export default function MiniQuiz() {
         Speed through your terms and see how many you can get right! Just type and hit enter.
       </p>
 
-      {/* List Name */}
+      {/* List Name and Progress */}
       <h1 style={{
         padding: '.5rem',
         alignItems: 'center',
@@ -103,6 +179,15 @@ export default function MiniQuiz() {
         display: 'flex'
       }}>{listName}
       </h1>
+
+      {/* Progress indicator */}
+      <p style={{
+        textAlign: 'center',
+        fontSize: '20px',
+        margin: '1rem 0',
+      }}>
+        Progress: {cards.length - remainingCards.length} / {cards.length} terms completed
+      </p>
 
       {/* Term and Input */}
       {currentTerm && (
@@ -116,7 +201,7 @@ export default function MiniQuiz() {
             fontSize: '3rem',
             fontWeight: 'bold',
             color: status === 'correct' ? 'green' : status === 'incorrect' ? 'red' : 'black',
-          }}>{currentTerm.term}</h2>
+          }}>{isReversed ? currentTerm.translation : currentTerm.term}</h2>
           <form onSubmit={handleSubmit}>
             <input style={{
               fontSize: '2rem'
@@ -130,7 +215,21 @@ export default function MiniQuiz() {
         </div>
       )}
 
-
+      {/* Reverse Button */}
+      <div style={{
+        display: 'flex',
+        justifyContent: 'center',
+      }}>
+        <button
+          type="button"
+          onClick={() => {
+            // Toggle between normal and reversed
+            setIsReversed(!isReversed);
+          }}
+        >
+          {isReversed ? 'Display Terms' : 'Display Translations'}
+        </button>
+      </div>
     </div>
   );
 }

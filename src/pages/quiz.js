@@ -16,6 +16,8 @@ export default function Quiz() {
   const [score, setScore] = useState(0);
   const [wrongCards, setWrongCards] = useState([]);
 
+  const [isReversed, setIsReversed] = useState(false);
+
   useEffect(() => {
     // Fetch all cards from your backend
     fetch(`lists/${listId}/cards`)
@@ -43,6 +45,12 @@ export default function Quiz() {
         if (!response.ok) {
           throw new Error('Failed to update accuracy');
         }
+        // Update the local state with the new values
+        setCards(prev => prev.map(c => 
+          c.id === card.id 
+            ? { ...c, correct_attempts: new_correct, total_attempts: new_total }
+            : c
+        ));
       })
       .catch(error => console.error('Error updating accuracy:', error));
     }
@@ -109,7 +117,7 @@ export default function Quiz() {
                 minWidth: '40%', 
                 textAlign: 'right'
               }}>
-              {card.term}
+              {isReversed ? card.translation : card.term}
             </div>
 
             <input
@@ -129,8 +137,6 @@ export default function Quiz() {
         ))}
       </div>
 
-
-
       {/* Button */}
       <div style={{
         margin: '.5rem',
@@ -142,7 +148,12 @@ export default function Quiz() {
         fontWeight: 'bold'      
       }}
         onClick={() => {
-        const wrong = cards.filter(c => c.translation !== answers[c.id] && c.secondary_translation !== answers[c.id]);
+        // Check answers based on reversed mode
+        const wrong = cards.filter(c => {
+          const correctAnswer = isReversed ? c.term : c.translation;
+          const secondaryAnswer = isReversed ? '' : c.secondary_translation;
+          return answers[c.id] !== correctAnswer && (secondaryAnswer ? answers[c.id] !== secondaryAnswer : true);
+        });
         setWrongCards(wrong);
         setScore(cards.length - wrong.length);
         setQuizComplete(true);
@@ -171,15 +182,36 @@ export default function Quiz() {
 
           {wrongCards.length > 0 && (
             <ul>
-              {wrongCards.map(c => <li key={c.id}>{c.term}: {c.translation}</li>)}
+              {wrongCards.map(c => (
+                <li key={c.id}>
+                  {isReversed ? c.translation : c.term}: {isReversed ? c.term : c.translation}
+                </li>
+              ))}
             </ul>
           )}
         </div>
       )}
 
-
-
-
+      {/* Reverse Button */}
+      <div style={{
+        display: 'flex',
+        justifyContent: 'center',
+        padding: '1rem',
+      }}>
+        <button
+          type="button"
+          onClick={() => {
+            // Clear answers and toggle between normal and reversed
+            setAnswers({});
+            setQuizComplete(false);
+            setScore(0);
+            setWrongCards([]);
+            setIsReversed(!isReversed);
+          }}
+        >
+          {isReversed ? 'Show Terms → Translations' : 'Show Translations → Terms'}
+        </button>
+      </div>
     </div>
   );
 }

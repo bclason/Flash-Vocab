@@ -1,9 +1,11 @@
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import NewCard from '../components/new_card';
-//import { Card } from 'react-bootstrap';
 
 
+
+//TODO: sort by accuracy
+// reset accuracy button
 
 export default function Edit() {
   const [cards, setCards] = useState([]);
@@ -107,9 +109,31 @@ export default function Edit() {
         console.error('Error deleting card:', error);
         alert('An error occurred while deleting the card.');
       }
-    //}
   };
-  
+
+
+  const resetAccuracy = async () => {
+    try {
+      const response = await fetch(`/lists/${listId}/reset-accuracy`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+      });
+
+      if (response.ok) {
+        // Update all cards in the local state
+        setCards(prevCards => prevCards.map(card => ({
+          ...card,
+          correct_attempts: 0,
+          total_attempts: 0
+        })));
+        console.log('All card accuracies reset successfully');
+      } else {
+        console.error('Failed to reset card accuracies');
+      }
+    } catch (error) {
+      console.error('Error resetting card accuracies:', error);
+    }
+  };
 
 
   return (
@@ -146,14 +170,29 @@ export default function Edit() {
       </form>
       </div>
 
+      {/* New Card and Reset Accuracy Buttons */}
       <div style={{
         display: 'flex',
-        marginLeft: '2rem',}}>
-        <button onClick={newCard} style={{ fontSize: '1.5rem', padding: '0.5rem 1rem' }}>
-          Add New Card
-        </button>
-      </div>
+        flexDirection: 'row',
+      }}>
+        <div style={{
+          display: 'flex',
+          marginLeft: '2rem'
+          }}>
+          <button onClick={newCard} style={{ fontSize: '1.5rem', padding: '0.5rem 1rem' }}>
+            Add New Card
+          </button>
+        </div>
 
+        <div style={{
+          display: 'flex',
+          marginLeft: '1rem'
+        }}>
+          <button onClick={resetAccuracy} style={{ fontSize: '1.5rem', padding: '0.5rem 1rem' }}>
+            Reset Accuracy
+          </button>
+        </div>
+      </div>
 
       {/* Cards */}
       <div style={{ 
@@ -170,7 +209,6 @@ export default function Edit() {
           />
         ))}
       </div>
-
     </div>
   );
 }
