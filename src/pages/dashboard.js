@@ -3,8 +3,7 @@ import { useEffect, useState } from 'react';
 import ListItem from '../components/list_item';
 
 
-// TODO: add functionality to practice only a subset of cards (likely have to have a screen before quiz)
-// add accent buttons
+// TODO: add accent buttons
 
 export default function Dashboard() {
   const [lists, setLists] = useState([]);

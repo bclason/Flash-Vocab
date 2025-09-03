@@ -22,8 +22,9 @@ export default function Quiz() {
   // Use the custom hook for starred filtering
   const { filteredCards, practiceStarredOnly, togglePracticeStarred, starredCount, totalCount } = useStarredFilter(cards);
 
+
+  // Fetch all cards from your backend (good)
   useEffect(() => {
-    // Fetch all cards from your backend
     fetch(`lists/${listId}/cards`)
       .then(res => res.json())
       .then(data => setCards(data))   // Save fetched data into state
@@ -76,31 +77,6 @@ export default function Quiz() {
           > Home</button>
       </div>
 
-      {/* Star filter button */}
-      <div style={{
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        margin: '1rem 0',
-      }}>
-        <button 
-          onClick={togglePracticeStarred}
-          title={practiceStarredOnly ? `Practice all cards (${totalCount})` : `Practice only starred cards (${starredCount})`}
-          style={{
-            fontSize: '2rem',
-            background: 'none',
-            border: 'none',
-            cursor: 'pointer',
-            marginRight: '1rem',
-          }}
-        >
-          {practiceStarredOnly ? '★' : '☆'}
-        </button>
-        <span style={{ fontSize: '1.2rem' }}>
-          {practiceStarredOnly ? `Quiz ${starredCount} starred cards` : `Quiz all ${totalCount} cards`}
-        </span>
-      </div>
-
       {/* Title */}
       <h1 style={{
         textAlign: 'center',
@@ -108,6 +84,7 @@ export default function Quiz() {
         fontSize: '52px',
         fontWeight: 'bolder',
       }}>Full Quiz</h1>
+
       {/* Description */}
       <p style={{
         textAlign: 'center',
@@ -116,16 +93,51 @@ export default function Quiz() {
         Feeling confident? Take the Full Quiz to test your full knowledge!
       </p>
 
-      {/* List Name */}
-      <h1 style={{
-        padding: '.5rem',
+    {/* Container to center everything */}
+    <div style={{
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginTop: '2rem',   // pushes it down a bit from the very top
+    }}>
+
+      {/* Row with button + title */}
+      <div style={{
+        display: 'flex',
+        flexDirection: 'row',
         alignItems: 'center',
-        fontSize: '42px',
-        textDecoration: 'underline',
-        justifyContent: 'center',
-        display: 'flex'
-      }}>{listName}
-      </h1>
+        gap: '1rem',  // space between star and text
+      }}>
+        <button 
+          onClick={
+            () => {
+              togglePracticeStarred();
+              setAnswers({});
+              setQuizComplete(false);
+              setScore(0);
+              setWrongCards([]);
+            }
+          }
+          title={practiceStarredOnly ? `Practice all cards (${totalCount})` : `Practice only starred cards (${starredCount})`}
+          style={{
+            fontSize: '2rem',
+            background: 'none',
+            border: 'none',
+            cursor: 'pointer',
+          }}
+        >
+          {practiceStarredOnly ? '★' : '☆'}
+        </button>
+
+        <h1 style={{
+          fontSize: '42px',
+          textDecoration: 'underline',
+          margin: 0,
+        }}>
+          {listName}
+        </h1>
+      </div>
+    </div>
 
     {/* Terms and Input Boxes */}
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
@@ -172,24 +184,31 @@ export default function Quiz() {
         justifyContent: 'center',
         display: 'flex'
       }}>
-      <button style={{
-        fontSize: '2rem',
-        fontWeight: 'bold'      
-      }}
-        onClick={() => {
-        // Check answers based on reversed mode
-        const wrong = cards.filter(c => {
-          const correctAnswer = isReversed ? c.term : c.translation;
-          const secondaryAnswer = isReversed ? '' : c.secondary_translation;
-          return answers[c.id] !== correctAnswer && (secondaryAnswer ? answers[c.id] !== secondaryAnswer : true);
-        });
-        setWrongCards(wrong);
-        setScore(filteredCards.length - wrong.length);
-        setQuizComplete(true);
-        updateAccuracy(wrong);
-      }}>
-        Submit
-      </button>
+        {filteredCards.length === 0 ? (
+          <div style={{ fontSize: '1.5rem', padding: '1rem' }}>
+            No starred cards found
+          </div>
+        ) : (
+          <button style={{
+            fontSize: '2rem',
+            fontWeight: 'bold'      
+          }}
+            onClick={() => {
+              // Check answers based on reversed mode - use filteredCards instead of cards (case-insensitive)
+              const wrong = filteredCards.filter(c => {
+                const userAnswer = (answers[c.id] || '').toLowerCase().trim();
+                const correctAnswer = (isReversed ? c.term : c.translation) ? (isReversed ? c.term : c.translation).toLowerCase().trim() : '';
+                const secondaryAnswer = isReversed ? '' : (c.secondary_translation ? c.secondary_translation.toLowerCase().trim() : '');
+                return userAnswer !== correctAnswer && (secondaryAnswer ? userAnswer !== secondaryAnswer : true);
+              });
+              setWrongCards(wrong);
+              setScore(filteredCards.length - wrong.length);
+              setQuizComplete(true);
+              updateAccuracy(wrong);
+            }}>
+            Submit
+          </button>
+        )}
       </div>
       
       {/* Results */}

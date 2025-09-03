@@ -5,11 +5,6 @@ import incorrectSound from '../components/incorrect.mp3';
 import { useStarredFilter } from '../hooks/useStarredFilter';
 
 
-// TODO: 
-// not updating accuracy correctly
-// also add functionality to practice only a subset of cards (likely have to have a screen before quiz)
-// checking for lowercase 
-
 
 export default function MiniQuiz() {
   const navigate = useNavigate();
@@ -81,8 +76,12 @@ export default function MiniQuiz() {
     const correctAnswer = isReversed ? currentTerm.term : currentTerm.translation;
     const secondaryAnswer = isReversed ? '' : currentTerm.secondary_translation;
     
-    // Check if answer matches correct answer or secondary translation
-    if (answer === correctAnswer || (secondaryAnswer && answer === secondaryAnswer)) {
+    // Check if answer matches correct answer or secondary translation (case-insensitive)
+    const answerLower = answer.toLowerCase().trim();
+    const correctAnswerLower = correctAnswer.toLowerCase().trim();
+    const secondaryAnswerLower = secondaryAnswer ? secondaryAnswer.toLowerCase().trim() : '';
+    
+    if (answerLower === correctAnswerLower || (secondaryAnswerLower && answerLower === secondaryAnswerLower)) {
       new Audio(correctSound).play();
       setStatus('correct');
       setTimeout(() => {
@@ -228,8 +227,8 @@ export default function MiniQuiz() {
       {/* Progress indicator */}
       <p style={{
         textAlign: 'center',
-        fontSize: '20px',
-        margin: '1rem 0',
+        fontSize: '1.5rem',
+        padding: '1rem',
       }}>
         {filteredCards.length === 0 ? 'No starred cards found' : `${filteredCards.length - remainingCards.length} / ${filteredCards.length} terms completed`}
       </p>
