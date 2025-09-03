@@ -2,6 +2,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import correctSound from '../components/correct.mp3';
 import incorrectSound from '../components/incorrect.mp3';
+import { useStarredFilter } from '../hooks/useStarredFilter';
 
 
 // TODO: 
@@ -24,7 +25,10 @@ export default function MiniQuiz() {
   const listName = state?.listName;
 
   const [isReversed, setIsReversed] = useState(false);
+  const [starred, setIsStarred] = useState(false);
+  const { filteredCards, practiceStarredOnly, togglePracticeStarred, starredCount, totalCount } = useStarredFilter(cards);
 
+  // Fetch all cards when the component mounts (all set)
   useEffect(() => {
     // Fetch all cards from your backend
     fetch(`lists/${listId}/cards`)
@@ -36,14 +40,25 @@ export default function MiniQuiz() {
       .catch(err => console.error('Failed to fetch cards', err));
   }, [listId]);
 
+
   useEffect(() => {
-    if (remainingCards.length > 0) {
+    // This runs when the star button is clicked (practiceStarredOnly changes)
+    if (cards.length > 0) {
+      setRemainingCards([...filteredCards]); // Switch between starred and all cards
+      // Clear current term so a new one gets selected from the new set
+      setCurrentTerm(null);
+    } 
+  }, [starred]);
+
+
+  useEffect(() => {
+    if (remainingCards.length > 0 && filteredCards.length > 0) {
       getRandomTerm();
-    } else if (cards.length > 0) {
+    } else if (remainingCards.length === 0 && filteredCards.length > 0 && cards.length > 0) {
       // All cards completed - show completion message or restart
-      alert(`Congratulations! You've completed all ${cards.length} terms!`);
-      setRemainingCards([...cards]); // Reset for another round
-      getRandomTerm();
+      // Only show if we have cards loaded (prevents initial load alert)
+      alert(`Congratulations! You've completed all ${filteredCards.length} terms!`);
+      setRemainingCards([...filteredCards]); // Reset for another round
     }
   }, [remainingCards]);
 
@@ -169,16 +184,46 @@ export default function MiniQuiz() {
         Speed through your terms and see how many you can get right! Just type and hit enter.
       </p>
 
-      {/* List Name and Progress */}
-      <h1 style={{
-        padding: '.5rem',
+      {/* Container to center everything */}
+    <div style={{
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginTop: '2rem',   // pushes it down a bit from the very top
+    }}>
+
+      {/* Row with button + title */}
+      <div style={{
+        display: 'flex',
+        flexDirection: 'row',
         alignItems: 'center',
-        fontSize: '42px',
-        textDecoration: 'underline',
-        justifyContent: 'center',
-        display: 'flex'
-      }}>{listName}
-      </h1>
+        gap: '1rem',  // space between star and text
+      }}>
+        <button 
+          onClick={() => {
+            togglePracticeStarred();
+            setIsStarred(!starred);
+          }}
+          title={practiceStarredOnly ? `Practice all cards (${totalCount})` : `Practice only starred cards (${starredCount})`}
+          style={{
+            fontSize: '2rem',
+            background: 'none',
+            border: 'none',
+            cursor: 'pointer',
+          }}
+        >
+          {practiceStarredOnly ? '★' : '☆'}
+        </button>
+
+        <h1 style={{
+          fontSize: '42px',
+          textDecoration: 'underline',
+          margin: 0,
+        }}>
+          {listName}
+        </h1>
+      </div>
+    </div>
 
       {/* Progress indicator */}
       <p style={{
@@ -186,7 +231,7 @@ export default function MiniQuiz() {
         fontSize: '20px',
         margin: '1rem 0',
       }}>
-        Progress: {cards.length - remainingCards.length} / {cards.length} terms completed
+        {filteredCards.length === 0 ? 'No starred cards found' : `${filteredCards.length - remainingCards.length} / ${filteredCards.length} terms completed`}
       </p>
 
       {/* Term and Input */}
@@ -233,4 +278,3 @@ export default function MiniQuiz() {
     </div>
   );
 }
-

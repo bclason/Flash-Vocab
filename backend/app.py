@@ -6,11 +6,11 @@ import datetime
 
 app = Flask(__name__)
 CORS(app)
-# CORS(app, origins=["http://localhost:3000"])
 
 init_db()
 
 DB_FILE = 'database.db'
+
 
 def get_db_connection():
     conn = sqlite3.connect(DB_FILE)
@@ -149,6 +149,7 @@ def update_card(id):
     secondary_translation = data.get('secondary_translation', '')
     correct_attempts = data.get('correct_attempts')
     total_attempts = data.get('total_attempts')
+    starred = data.get('starred')
 
     conn = get_db_connection()
     
@@ -160,7 +161,7 @@ def update_card(id):
         )
     # Handle single field updates (field-value format)
     elif field and value is not None:
-        allowed_fields = ['term', 'translation', 'secondary_translation']
+        allowed_fields = ['term', 'translation', 'secondary_translation', 'starred']
         if field not in allowed_fields:
             conn.close()
             return jsonify({'error': f'Invalid field: {field}'}), 400

@@ -1,5 +1,6 @@
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useState, useEffect } from 'react';
+import { useStarredFilter } from '../hooks/useStarredFilter';
 
 
 
@@ -18,6 +19,9 @@ export default function Quiz() {
 
   const [isReversed, setIsReversed] = useState(false);
 
+  // Use the custom hook for starred filtering
+  const { filteredCards, practiceStarredOnly, togglePracticeStarred, starredCount, totalCount } = useStarredFilter(cards);
+
   useEffect(() => {
     // Fetch all cards from your backend
     fetch(`lists/${listId}/cards`)
@@ -27,7 +31,7 @@ export default function Quiz() {
   }, [listId]);
 
   const updateAccuracy = (wrong) => {
-    for (const card of cards) {
+    for (const card of filteredCards) {
       let new_correct = card.correct_attempts;
       let new_total = card.total_attempts;
       if (!wrong.some(c => c.id === card.id)) {
@@ -72,6 +76,31 @@ export default function Quiz() {
           > Home</button>
       </div>
 
+      {/* Star filter button */}
+      <div style={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        margin: '1rem 0',
+      }}>
+        <button 
+          onClick={togglePracticeStarred}
+          title={practiceStarredOnly ? `Practice all cards (${totalCount})` : `Practice only starred cards (${starredCount})`}
+          style={{
+            fontSize: '2rem',
+            background: 'none',
+            border: 'none',
+            cursor: 'pointer',
+            marginRight: '1rem',
+          }}
+        >
+          {practiceStarredOnly ? '★' : '☆'}
+        </button>
+        <span style={{ fontSize: '1.2rem' }}>
+          {practiceStarredOnly ? `Quiz ${starredCount} starred cards` : `Quiz all ${totalCount} cards`}
+        </span>
+      </div>
+
       {/* Title */}
       <h1 style={{
         textAlign: 'center',
@@ -100,7 +129,7 @@ export default function Quiz() {
 
     {/* Terms and Input Boxes */}
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-        {cards.map(card => (
+        {filteredCards.map(card => (
           <div
             key={card.id}
             style={{
@@ -155,7 +184,7 @@ export default function Quiz() {
           return answers[c.id] !== correctAnswer && (secondaryAnswer ? answers[c.id] !== secondaryAnswer : true);
         });
         setWrongCards(wrong);
-        setScore(cards.length - wrong.length);
+        setScore(filteredCards.length - wrong.length);
         setQuizComplete(true);
         updateAccuracy(wrong);
       }}>
@@ -175,10 +204,10 @@ export default function Quiz() {
         }}>
           <p style={{
             fontWeight: 'bold'
-          }}>Score: {score}/{cards.length}</p>
+          }}>Score: {score}/{filteredCards.length}</p>
           <p style={{
             fontWeight: 'bold'
-          }}>{quizComplete && score === cards.length ? 'Perfect score!' : 'Terms to work on:'}</p>
+          }}>{quizComplete && score === filteredCards.length ? 'Perfect score!' : 'Terms to work on:'}</p>
 
           {wrongCards.length > 0 && (
             <ul>

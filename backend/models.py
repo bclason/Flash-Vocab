@@ -14,6 +14,7 @@ def init_db():
     ''')
 
     # Create cards table
+    # TODO: potentially add starred column
     c.execute('''
         CREATE TABLE IF NOT EXISTS cards (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -23,6 +24,7 @@ def init_db():
             secondary_translation TEXT DEFAULT '',
             correct_attempts INTEGER DEFAULT 0,
             total_attempts INTEGER DEFAULT 0,
+            starred BOOLEAN DEFAULT FALSE,
             FOREIGN KEY (list_id) REFERENCES lists(id) ON DELETE CASCADE
         )
     ''')

@@ -3,8 +3,8 @@ import { useEffect, useState } from 'react';
 import ListItem from '../components/list_item';
 
 
-// TODO: add functionality to reverse term and def (answer with term)
-// also add functionality to practice only a subset of cards (likely have to have a screen before quiz)
+// TODO: add functionality to practice only a subset of cards (likely have to have a screen before quiz)
+// add accent buttons
 
 export default function Dashboard() {
   const [lists, setLists] = useState([]);
@@ -30,7 +30,7 @@ export default function Dashboard() {
       });
 
       if (response.ok) {
-        console.log('List created successfully');
+        //console.log('List created successfully');
         const data = await response.json();
         const listId = data.id; 
         const newListName = data.name;
@@ -66,7 +66,7 @@ export default function Dashboard() {
 
 
   const handleEdit = (id) => {
-    console.log("id:", id)
+    //console.log("id:", id)
     fetch(`/lists/${id}`)
       .then(res => {
         if (!res.ok) throw new Error(`Failed to fetch list: ${res.status}`);
@@ -80,18 +80,11 @@ export default function Dashboard() {
   };
 
 
-  // will be handled by dropdown button
-  // const handlePractice = (id) => {
-  //   // Logic to start practicing the list by id
-  //   console.log(`Starting practice for list with id ${id}`);
-  // };
-
   const handleStats = (id) => {
     navigate('/edit');
     // Logic to view stats for the list by id
-    console.log(`Viewing stats for list with id ${id}`);
+    //console.log(`Viewing stats for list with id ${id}`);
   };
-
 
 
   return (

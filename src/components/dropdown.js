@@ -1,27 +1,41 @@
 import { useState } from 'react';
-import { useNavigate, Link, Navigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 
 export default function CustomDropdown({ listId, listName }) {
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
 
+  const updateUsedStats = () => {
+    fetch(`/lists/${listId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: listId, name: listName, last_used: new Date().toISOString().slice(0, 19).replace('T', ' ') })
+    })
+      .then(res => {
+        if (!res.ok) throw new Error('Failed to update stats');
+      })
+      .catch(err => console.error('Error updating stats:', err));
+  };
 
-    const handleFlashcards = () => {
-      navigate('/flashcards', { state: { listName: listName, listId: listId } });
+  const handleFlashcards = () => {
+    updateUsedStats();
+    navigate('/flashcards', { state: { listName: listName, listId: listId } });
+  };
+
+  const handleFlashQuiz = () => {
+    updateUsedStats();
+    navigate('/mini', { state: { listName: listName, listId: listId } });
     };
 
-    const handleFlashQuiz = () => {
-      navigate('/mini', { state: { listName: listName, listId: listId } });
-    };
+  const handleFullQuiz = () => {
+    updateUsedStats();
+    navigate('/quiz', { state: { listName: listName, listId: listId } });
+  };
 
-    const handleFullQuiz = () => {
-      navigate('/quiz', { state: { listName: listName, listId: listId } });
-    };
-
-    const handleMedley = () => {
-      navigate('/chunk');
-    };
+  const handleMedley = () => {
+    navigate('/chunk');
+  };
 
   return (
     <div style={{ position: 'relative', display: 'inline-block' }}>

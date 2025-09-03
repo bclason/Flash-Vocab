@@ -2,6 +2,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { FlashcardArray } from 'react-quizlet-flashcard';
 import "react-quizlet-flashcard/dist/index.css";
+import { useStarredFilter } from '../hooks/useStarredFilter';
 
 
 
@@ -13,6 +14,9 @@ export default function Flashcards() {
   const { state } = useLocation();
   const listId = state?.listId;
   const listName = state?.listName;
+
+  // Use the custom hook for starred filtering
+  const { filteredCards, practiceStarredOnly, togglePracticeStarred, starredCount, totalCount } = useStarredFilter(cards);
 
 
   useEffect(() => {
@@ -27,6 +31,7 @@ export default function Flashcards() {
       })
       .then(data => {
         console.log('Fetched cards:', data);
+        console.log('Cards with starred field:', data.map(card => ({ id: card.id, term: card.term, starred: card.starred })));
         if (data && Array.isArray(data)) {
           setCards(data);
         } else {
@@ -79,8 +84,12 @@ export default function Flashcards() {
     }));
   }
 
-  // Create the deck using the function
-  const deck = createCards(cards, isReversed);
+  // Create the deck using the filtered cards
+  const deck = createCards(filteredCards, isReversed);
+  console.log('Filtered cards:', filteredCards);
+  console.log('Deck created:', deck);
+  console.log('Practice starred only:', practiceStarredOnly);
+  console.log('Starred count:', starredCount);
   
 
   return (
@@ -105,16 +114,45 @@ export default function Flashcards() {
         fontWeight: 'bolder',
       }}>Flashcards</h1>
 
-      {/* List Name */}
-      <h1 style={{
-        padding: '.5rem',
+    {/* Container to center everything */}
+    <div style={{
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginTop: '2rem',   // pushes it down a bit from the very top
+    }}>
+
+      {/* Row with button + title */}
+      <div style={{
+        display: 'flex',
+        flexDirection: 'row',
         alignItems: 'center',
-        fontSize: '42px',
-        textDecoration: 'underline',
-        justifyContent: 'center',
-        display: 'flex'
-      }}>{listName}
-      </h1>
+        gap: '1rem',  // space between star and text
+      }}>
+        <button 
+          onClick={togglePracticeStarred}
+          title={practiceStarredOnly ? `Practice all cards (${totalCount})` : `Practice only starred cards (${starredCount})`}
+          style={{
+            fontSize: '2rem',
+            background: 'none',
+            border: 'none',
+            cursor: 'pointer',
+          }}
+        >
+          {practiceStarredOnly ? '★' : '☆'}
+        </button>
+
+        <h1 style={{
+          fontSize: '42px',
+          textDecoration: 'underline',
+          margin: 0,
+        }}>
+          {listName}
+        </h1>
+      </div>
+    </div>
+
+
 
       {/* Flashcards */}
       {deck && deck.length > 0 ? (
@@ -128,7 +166,14 @@ export default function Flashcards() {
         </div>
       ) : (
         <p style={{ textAlign: 'center', fontSize: '18px', padding: '2rem' }}>
-          {cards.length === 0 ? 'Loading flashcards...' : 'No cards found for this list.'}
+          {cards.length === 0 
+            ? 'Loading flashcards...' 
+            : practiceStarredOnly && starredCount === 0
+            ? 'No starred cards found. Star some cards in the edit page first!'
+            : practiceStarredOnly 
+            ? `No starred cards available (${starredCount} total)`
+            : 'No cards found for this list.'
+          }
         </p>
       )}
 

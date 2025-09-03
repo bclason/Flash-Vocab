@@ -1,14 +1,14 @@
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import NewCard from '../components/new_card';
+import Dropdown2 from '../components/dropdown2';
 
 
-
-//TODO: sort by accuracy
-// reset accuracy button
 
 export default function Edit() {
   const [cards, setCards] = useState([]);
+  const [sortedCards, setSortedCards] = useState([]);
+  const [currentSort, setCurrentSort] = useState('none'); // Track current sort method
   const navigate = useNavigate();
   const [textEntry, setTextEntry] = useState('');
   
@@ -21,9 +21,53 @@ export default function Edit() {
     // Fetch all cards from your backend
     fetch(`lists/${listId}/cards`)
       .then(res => res.json())
-      .then(data => setCards(data))   // Save fetched data into state
+      .then(data => {
+        setCards(data);
+        setSortedCards(data); // Initialize sorted cards with original data
+      })
       .catch(err => console.error('Failed to fetch cards', err));
   }, [listId]);
+
+  // Update sortedCards whenever cards change, reapplying current sort
+  useEffect(() => {
+    if (currentSort === 'starred') {
+      applySortByStarred(cards);
+    } else if (currentSort === 'accuracyLowHigh') {
+      applySortByAccuracyLowHigh(cards);
+    } else if (currentSort === 'accuracyHighLow') {
+      applySortByAccuracyHighLow(cards);
+    } else {
+      setSortedCards([...cards]); // Default: no sort
+    }
+  }, [cards, currentSort]);
+
+  // Helper functions to apply sorting without changing currentSort state
+  const applySortByStarred = (cardsToSort) => {
+    const sorted = [...cardsToSort].sort((a, b) => {
+      if (a.starred && !b.starred) return -1;
+      if (!a.starred && b.starred) return 1;
+      return 0;
+    });
+    setSortedCards(sorted);
+  };
+
+  const applySortByAccuracyLowHigh = (cardsToSort) => {
+    const sorted = [...cardsToSort].sort((a, b) => {
+      const accuracyA = a.total_attempts > 0 ? (a.correct_attempts / a.total_attempts) : 0;
+      const accuracyB = b.total_attempts > 0 ? (b.correct_attempts / b.total_attempts) : 0;
+      return accuracyA - accuracyB;
+    });
+    setSortedCards(sorted);
+  };
+
+  const applySortByAccuracyHighLow = (cardsToSort) => {
+    const sorted = [...cardsToSort].sort((a, b) => {
+      const accuracyA = a.total_attempts > 0 ? (a.correct_attempts / a.total_attempts) : 0;
+      const accuracyB = b.total_attempts > 0 ? (b.correct_attempts / b.total_attempts) : 0;
+      return accuracyB - accuracyA;
+    });
+    setSortedCards(sorted);
+  };
 
 
   const handleUpdateList = (event) => {
@@ -40,7 +84,7 @@ export default function Edit() {
       body: JSON.stringify({name: textEntry}),
     });
     if (response.ok) {
-      console.log('List name updated successfully');
+      //console.log('List name updated successfully');
     } else {
       console.error('Failed to update list');
     }
@@ -75,7 +119,7 @@ export default function Edit() {
     setCards(prev =>
       prev.map(c => c.id === cardId ? { ...c, [field]: value } : c)
     )
-    console.log("Cards state:", cards.map(c => ({ id: c.id, ...c })));
+    //console.log("Cards state:", cards.map(c => ({ id: c.id, ...c })));
     const response = await fetch(`/cards/${cardId}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
@@ -84,7 +128,7 @@ export default function Edit() {
     //console.log("Updating card:", { cardId, field, value });
     if (response.ok) {
       setCards(prev => prev.map(c => c.id === cardId ? { ...c, [field]: value } : c));
-      console.log('Card updated successfully');
+      //console.log('Card updated successfully');
     } else {
       console.error('Failed to update card');
     }
@@ -99,7 +143,7 @@ export default function Edit() {
         });
         if (response.ok) {
           setCards(cards.filter(card => card.id !== cardId));
-          console.log('Card deleted successfully');
+          //console.log('Card deleted successfully');
         } else {
           const errorData = await response.json();
           console.error('Failed to delete card:', errorData);
@@ -133,6 +177,22 @@ export default function Edit() {
     } catch (error) {
       console.error('Error resetting card accuracies:', error);
     }
+  };
+
+  // Sorting functions that update currentSort state
+  const sortByStarred = () => {
+    setCurrentSort('starred');
+    applySortByStarred(cards);
+  };
+
+  const sortByAccuracyLowHigh = () => {
+    setCurrentSort('accuracyLowHigh');
+    applySortByAccuracyLowHigh(cards);
+  };
+
+  const sortByAccuracyHighLow = () => {
+    setCurrentSort('accuracyHighLow');
+    applySortByAccuracyHighLow(cards);
   };
 
 
@@ -170,7 +230,7 @@ export default function Edit() {
       </form>
       </div>
 
-      {/* New Card and Reset Accuracy Buttons */}
+      {/* New Card and Reset Accuracy and Sort By Buttons */}
       <div style={{
         display: 'flex',
         flexDirection: 'row',
@@ -192,14 +252,27 @@ export default function Edit() {
             Reset Accuracy
           </button>
         </div>
+
+        <div style={{
+          display: 'flex',
+          marginLeft: '1rem'
+        }}>
+          <Dropdown2 
+            listId={listId} 
+            listName={listName}
+            onSortByStarred={sortByStarred}
+            onSortByAccuracyLowHigh={sortByAccuracyLowHigh}
+            onSortByAccuracyHighLow={sortByAccuracyHighLow}
+          />
+        </div>
       </div>
 
       {/* Cards */}
       <div style={{ 
             padding: '1rem',  
           }}>
-        {/* Render all cards */}
-        {cards.map(card => (
+        {/* Render all cards using sortedCards instead of cards */}
+        {sortedCards.map(card => (
           <NewCard 
             key={card.id} 
             card={card}

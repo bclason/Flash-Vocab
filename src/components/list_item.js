@@ -1,7 +1,6 @@
 import CustomDropdown from './dropdown';
 
 export default function ListItem({ listId, listName, onEdit, onDelete, onStats }) {
-    // include a are you sure you want to delete this list confirmation dialog for onclick for delete
   return (
     <div style={{ padding: '1rem', margin: '0 auto' }}>
         <div className="list-item" style={{ display: 'flex', alignItems: 'center', padding: '1rem', border: '4px solid #000' }}>
