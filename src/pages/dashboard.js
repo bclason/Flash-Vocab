@@ -3,7 +3,6 @@ import { useEffect, useState } from 'react';
 import ListItem from '../components/list_item';
 
 
-// TODO: add accent buttons
 
 export default function Dashboard() {
   const [lists, setLists] = useState([]);
@@ -65,7 +64,6 @@ export default function Dashboard() {
 
 
   const handleEdit = (id) => {
-    //console.log("id:", id)
     fetch(`/lists/${id}`)
       .then(res => {
         if (!res.ok) throw new Error(`Failed to fetch list: ${res.status}`);
@@ -80,9 +78,16 @@ export default function Dashboard() {
 
 
   const handleStats = (id) => {
-    navigate('/edit');
-    // Logic to view stats for the list by id
-    //console.log(`Viewing stats for list with id ${id}`);
+     fetch(`/lists/${id}`)
+      .then(res => {
+        if (!res.ok) throw new Error(`Failed to fetch list: ${res.status}`);
+        return res.json();
+      })
+      .then(data => {
+        const listName = data.name;
+        navigate('/grouping', { state: { listName: listName, listId: id } });
+      })
+      .catch(err => console.error('Error fetching list:', err));
   };
 
 

@@ -157,6 +157,7 @@ export default function MiniQuiz() {
       {/* Home button */}
       <div style={{
         display: 'flex',
+        textAlign: 'center',
         alignItems: 'center',
         padding: '.2rem',
         fontSize: '1.5rem',
@@ -167,36 +168,13 @@ export default function MiniQuiz() {
           > Home</button>
       </div>
 
-      {/* Title */}
-      <h1 style={{
-        textAlign: 'center',
-        alignItems: 'center',
-        fontSize: '52px',
-        fontWeight: 'bolder',
-      }}>Flash Quiz</h1>
-
-      {/* Description */}
-      <p style={{
-        textAlign: 'center',
-        fontSize: '24px',
-      }}>
-        Speed through your terms and see how many you can get right! Just type and hit enter.
-      </p>
-
-      {/* Container to center everything */}
-    <div style={{
-      display: 'flex',
-      justifyContent: 'center',
-      alignItems: 'center',
-      marginTop: '2rem',   // pushes it down a bit from the very top
-    }}>
-
-      {/* Row with button + title */}
+      {/* Starred, Title, List */}
       <div style={{
         display: 'flex',
         flexDirection: 'row',
         alignItems: 'center',
-        gap: '1rem',  // space between star and text
+        justifyContent: 'center',
+        gap: '1rem',
       }}>
         <button 
           onClick={() => {
@@ -205,30 +183,33 @@ export default function MiniQuiz() {
           }}
           title={practiceStarredOnly ? `Practice all cards (${totalCount})` : `Practice only starred cards (${starredCount})`}
           style={{
-            fontSize: '2rem',
+            fontSize: '3rem',
             background: 'none',
             border: 'none',
             cursor: 'pointer',
-          }}
-        >
+          }}>
           {practiceStarredOnly ? '★' : '☆'}
         </button>
-
         <h1 style={{
-          fontSize: '42px',
-          textDecoration: 'underline',
-          margin: 0,
-        }}>
-          {listName}
-        </h1>
+          fontSize: '52px',
+          fontWeight: 'bolder',
+        }}>Flash Quiz: {listName}</h1>
       </div>
-    </div>
+
+      {/* Description */}
+      <p style={{
+        textAlign: 'center',
+        fontSize: '1.5rem',
+      }}>
+        Speed through your terms and see how many you can get right! Just type and hit enter.
+      </p>
 
       {/* Progress indicator */}
       <p style={{
         textAlign: 'center',
         fontSize: '1.5rem',
         padding: '1rem',
+        fontWeight: '550',
       }}>
         {filteredCards.length === 0 ? 'No starred cards found' : `${filteredCards.length - remainingCards.length} / ${filteredCards.length} terms completed`}
       </p>

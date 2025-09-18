@@ -1,0 +1,216 @@
+import { useNavigate, useLocation } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { DndContext } from '@dnd-kit/core';
+import Droppable from '../hooks/droppable';
+import Draggable from '../hooks/draggable';
+
+
+
+export default function Grouping() {
+  const navigate = useNavigate();
+  const { state } = useLocation();
+  const listId = state?.listId;
+  const listName = state?.listName;
+
+  const [cards, setCards] = useState([]);
+  const [isDropped, setIsDropped] = useState(false);
+  const [containers, setContainers] = useState([]);
+  const [cardPositions, setCardPositions] = useState({}); // Track which container each card is in
+  const [swapped, setSwapped] = useState(false);
+  // const [isFull, setIsFull] = useState(false);
+
+  // Fetch cards from the backend
+  useEffect(() => {
+    if (!listId) return;
+    fetch(`lists/${listId}/cards`)
+      .then(res => res.json())
+      .then(data => {
+        console.log('Fetched cards:', data);
+        if (data && Array.isArray(data)) {
+          setCards(data);
+          // Create groups based on number of cards (aim for 4-5 cards per group)
+          const numCards = data.length;
+          const cardsPerGroup = 4;
+          const numGroups = Math.ceil(numCards / cardsPerGroup);
+          const groupIds = Array.from({ length: numGroups }, (_, i) => i + 1); // 1, 2, 3, 4, etc.
+          setContainers(groupIds);
+          
+          // Initialize all cards as unassigned (null)
+          const initialPositions = {};
+          data.forEach(card => {
+            initialPositions[card.id] = null;
+          });
+          setCardPositions(initialPositions);
+        } else {
+          console.error('Expected array but got:', data);
+          setCards([]);
+        }
+      })
+      .catch(err => {
+        console.error('Failed to fetch cards', err);
+        setCards([]);
+      });
+  }, [listId]);
+
+  
+  const handleDragEnd = (event) => {
+    const { active, over } = event;
+    if (over) {
+      // Check if the target container already has 5 cards (if it's not the unassigned area)
+      if (over.id !== 'unassigned') {
+        const cardsInTarget = Object.values(cardPositions).filter(pos => pos === over.id).length;
+        if (cardsInTarget >= 5) {
+          alert('Groups can have a maximum of 5 cards');
+          return; // Don't allow the drop
+        }
+        else {
+          const response = fetch(`/cards/${active.id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ chunk_id: over.id }),
+          });
+          if (!response.ok) {
+            console.error('Failed to update card chunk');
+            return;
+          }
+        }
+      }
+      
+      // Update the position of the dragged card
+      setCardPositions(prev => ({
+        ...prev,
+        [active.id]: over.id === 'unassigned' ? null : over.id
+      }));
+    }
+  };
+
+  const AIsort = () => {
+    // Placeholder for AI sorting functionality
+    alert('AI Sort functionality is not yet implemented.');
+  };
+
+  // const swap = () => {
+  //   // Placeholder for swap functionality
+  //   alert('Swap Term and Definition functionality is not yet implemented.');
+  // };
+
+  return (
+    <div>
+      {/* Home and Medley Mode buttons */}
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        padding: '.2rem',
+        fontSize: '1.5rem',
+        flexDirection: 'row',
+      }}>
+          <button
+            type="button"
+            onClick={() => navigate('/')}
+          > Home</button>
+          <button
+            type="button"
+            onClick={() => navigate('/medley')}
+          > Medley Mode</button>
+      </div>
+
+      {/* Title and List Name */}
+      <h1 style= {{
+        textAlign: 'center',
+        alignItems: 'center',
+        fontSize: '52px',
+        fontWeight: 'bolder',
+      }}>Term Chunking: {listName}</h1>
+
+      {/* Description */}
+      <p style={{
+        textAlign: 'center',
+        fontSize: '24px',
+        marginLeft: '1.75rem',
+        marginRight: '1.75rem',
+      }}>
+        Grouping terms into small related groups or "chunks" can improve memory retention. Manually group terms in chunks of 4-5 or automatically group with AI. Once grouped, practice one chunk at a time in Medley mode.
+      </p>
+
+      {/* Buttons */}
+      <div style={{
+        display: 'flex',
+        flexDirection: 'row',
+      }}>
+        <div style={{
+          display: 'flex',
+          marginLeft: '2rem'
+          }}>
+          <button onClick={AIsort} style={{ fontSize: '1.5rem', padding: '0.5rem 1rem' }}>
+            AI Sort
+          </button>
+        </div>
+
+        <div style={{
+          display: 'flex',
+          marginLeft: '1rem'
+        }}>
+          <button onClick={() => setSwapped(!swapped)} style={{ fontSize: '1.5rem', padding: '0.5rem 1rem' }}>
+            Swap Term and Definition
+          </button>
+        </div>
+      </div>
+      <div>
+
+      <div style={{ marginTop: '2rem' }}>
+        <DndContext onDragEnd={handleDragEnd}>
+          {/* Unassigned cards */}
+          <div style={{ marginBottom: '2rem' }}>
+            <h3 style={{ textAlign: 'center', marginBottom: '1rem' }}>Unassigned Cards</h3>
+            <Droppable id="unassigned">
+              <div style={{ 
+                display: 'flex', 
+                flexWrap: 'wrap', 
+                justifyContent: 'center', 
+                gap: '1rem',
+                minHeight: '60px',
+                padding: '1rem'
+              }}>
+                {cards.filter(card => cardPositions[card.id] === null).map(card => (
+                  <Draggable key={card.id} id={card.id}>
+                    <div>
+                      {swapped ? card.translation : card.term}
+                    </div>
+                  </Draggable>
+                ))}
+              </div>
+            </Droppable>
+          </div>
+
+          {/* Droppable containers */}
+          <div style={{ 
+            display: 'flex', 
+            justifyContent: 'space-around', 
+            gap: '2rem',
+            marginTop: '1rem'
+          }}>
+            {containers.map((id) => (
+              <div key={id} style={{ flex: 1 }}>
+                <h4 style={{ textAlign: 'center', marginBottom: '0.5rem' }}>Group {id}</h4>
+                <Droppable id={id}>
+                  <div style={{ minHeight: '200px', padding: '1rem' }}>
+                    {cards.filter(card => cardPositions[card.id] === id).map(card => (
+                      <Draggable key={card.id} id={card.id}>
+                        <div style={{ padding: '0.3rem'}}>
+                          {card.term}
+                        </div>
+                      </Draggable>
+                    ))}
+                  </div>
+                </Droppable>
+              </div>
+            ))}
+          </div>
+        </DndContext>
+      </div>
+      </div>
+    </div>
+  );
+}
+

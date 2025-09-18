@@ -1,11 +1,14 @@
 from flask import Flask, request, jsonify
+from openai import OpenAI
 from flask_cors import CORS
 import sqlite3
 from models import init_db
 import datetime
 
+
 app = Flask(__name__)
 CORS(app)
+#client = OpenAI()
 
 init_db()
 
@@ -205,6 +208,42 @@ def reset_list_accuracy(list_id):
     conn.close()
 
     return jsonify({'message': 'All card accuracies reset successfully'})
+
+
+
+# Group words using OpenAI (from AISorting.py)
+@app.route('/group-words', methods=['POST'])
+def group_words():
+    data = request.get_json()
+    words = data.get('words', [])
+    if not isinstance(words, list) or not all(isinstance(w, str) for w in words):
+        return jsonify({'error': 'Invalid input, expected a list of words'}), 400
+
+    prompt = f"""
+    Group these words into sets of 4–5 based on similarity
+    (meaning, function, or spelling).
+    Return valid JSON only, in the format:
+    {{
+        \"groups\": [
+            [\"word1\", \"word2\", \"word3\"],
+            [\"word4\", \"word5\", \"word6\"]
+        ]
+    }}
+
+    Words: {words}
+    """
+
+    response = client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[{"role": "user", "content": prompt}],
+        response_format={"type": "json_object"}
+    )
+
+    # Print full response to see what's happening (for debugging)
+    print(response)
+
+    # Parsed JSON is already a Python dict
+    return jsonify(response.choices[0].message.parsed)
 
 
 if __name__ == '__main__':

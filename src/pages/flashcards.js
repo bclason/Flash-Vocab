@@ -106,50 +106,31 @@ export default function Flashcards() {
             onClick={() => navigate('/')}
           > Home</button>
       </div>
-      {/* Title */}
-      <h1 style={{
-        textAlign: 'center',
-        alignItems: 'center',
-        fontSize: '52px',
-        fontWeight: 'bolder',
-      }}>Flashcards</h1>
 
-    {/* Container to center everything */}
-    <div style={{
-      display: 'flex',
-      justifyContent: 'center',
-      alignItems: 'center',
-      marginTop: '2rem',   // pushes it down a bit from the very top
-    }}>
-
-      {/* Row with button + title */}
+      {/* Starred, Title, List Name */}
       <div style={{
         display: 'flex',
         flexDirection: 'row',
         alignItems: 'center',
-        gap: '1rem',  // space between star and text
+        gap: '1rem',
+        justifyContent: 'center',
       }}>
         <button 
           onClick={togglePracticeStarred}
           title={practiceStarredOnly ? `Practice all cards (${totalCount})` : `Practice only starred cards (${starredCount})`}
           style={{
-            fontSize: '2rem',
+            fontSize: '3rem',
             background: 'none',
             border: 'none',
             cursor: 'pointer',
-          }}
-        >
+          }}>
           {practiceStarredOnly ? '★' : '☆'}
         </button>
 
-        <h1 style={{
-          fontSize: '42px',
-          textDecoration: 'underline',
-          margin: 0,
-        }}>
-          {listName}
-        </h1>
-      </div>
+      <h1 style={{
+        fontSize: '52px',
+        fontWeight: 'bolder',
+      }}>Flashcards: {listName}</h1>
     </div>
 
 

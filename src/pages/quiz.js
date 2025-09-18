@@ -78,12 +78,41 @@ export default function Quiz() {
       </div>
 
       {/* Title */}
+      <div style={{
+        display: 'flex',
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: '1rem',
+      }}>
+      <button 
+        onClick={
+          () => {
+            togglePracticeStarred();
+            setAnswers({});
+            setQuizComplete(false);
+            setScore(0);
+            setWrongCards([]);
+          }
+        }
+        title={practiceStarredOnly ? `Practice all cards (${totalCount})` : `Practice only starred cards (${starredCount})`}
+        style={{
+          fontSize: '3rem',
+          background: 'none',
+          border: 'none',
+          cursor: 'pointer',
+        }}
+      >
+        {practiceStarredOnly ? '★' : '☆'}
+      </button>
+
       <h1 style={{
         textAlign: 'center',
         alignItems: 'center',
         fontSize: '52px',
         fontWeight: 'bolder',
-      }}>Full Quiz</h1>
+      }}>Full Quiz: {listName}</h1>
+    </div>
 
       {/* Description */}
       <p style={{
@@ -92,52 +121,6 @@ export default function Quiz() {
       }}>
         Feeling confident? Take the Full Quiz to test your full knowledge!
       </p>
-
-    {/* Container to center everything */}
-    <div style={{
-      display: 'flex',
-      justifyContent: 'center',
-      alignItems: 'center',
-      marginTop: '2rem',   // pushes it down a bit from the very top
-    }}>
-
-      {/* Row with button + title */}
-      <div style={{
-        display: 'flex',
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: '1rem',  // space between star and text
-      }}>
-        <button 
-          onClick={
-            () => {
-              togglePracticeStarred();
-              setAnswers({});
-              setQuizComplete(false);
-              setScore(0);
-              setWrongCards([]);
-            }
-          }
-          title={practiceStarredOnly ? `Practice all cards (${totalCount})` : `Practice only starred cards (${starredCount})`}
-          style={{
-            fontSize: '2rem',
-            background: 'none',
-            border: 'none',
-            cursor: 'pointer',
-          }}
-        >
-          {practiceStarredOnly ? '★' : '☆'}
-        </button>
-
-        <h1 style={{
-          fontSize: '42px',
-          textDecoration: 'underline',
-          margin: 0,
-        }}>
-          {listName}
-        </h1>
-      </div>
-    </div>
 
     {/* Terms and Input Boxes */}
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>

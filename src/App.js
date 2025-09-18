@@ -7,7 +7,8 @@ import Edit from './pages/edit';
 import Flashcards from './pages/flashcards';
 import MiniQuiz from './pages/mini';
 import Quiz from './pages/quiz';
-import Chunk from './pages/chunk';
+import Grouping from './pages/grouping';
+import Medley from './pages/medley';
 
 export default function App() {
   return (
@@ -18,7 +19,8 @@ export default function App() {
         <Route path="/flashcards" element={<Flashcards />} />
         <Route path="/mini" element={<MiniQuiz />} />
         <Route path="/quiz" element={<Quiz />} />
-        <Route path="/chunk" element={<Chunk />} />
+        <Route path="/grouping" element={<Grouping />} />
+        <Route path="/medley" element={<Medley />} />
       </Routes>
     </Router>
   );

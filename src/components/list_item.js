@@ -11,7 +11,7 @@ export default function ListItem({ listId, listName, onEdit, onDelete, onStats }
               listName={listName}
             />
             <button onClick={onEdit}>Edit</button>
-            <button onClick={onStats}>Stats & Chunking</button>
+            <button onClick={onStats}>Chunking</button>
             <button style={{ color: 'red' }} onClick={onDelete}>Delete</button>
           </div>
         </div>

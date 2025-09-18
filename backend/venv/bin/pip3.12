@@ -1,4 +1,4 @@
-#!/home/bclason/projects/spanish_app/backend/venv/bin/python3
+#!/home/bclason/projects/spanish_app/flash_vocab/backend/venv/bin/python3
 # -*- coding: utf-8 -*-
 import re
 import sys

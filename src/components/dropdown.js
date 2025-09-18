@@ -34,7 +34,7 @@ export default function CustomDropdown({ listId, listName }) {
   };
 
   const handleMedley = () => {
-    navigate('/chunk');
+    navigate('/medley', { state: { listName: listName, listId: listId } });
   };
 
   return (
