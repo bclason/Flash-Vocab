@@ -164,6 +164,28 @@ export default function Quiz({
               ))}
             </ul>
           )}
+
+          {/* Restart Chunk button only in medley mode */}
+          {onComplete && (
+            <button
+              onClick={() => {
+                // Reset quiz state and call onComplete to restart chunk
+                setAnswers({});
+                setQuizComplete(false);
+                setScore(0);
+                setWrongCards([]);
+                onComplete();
+              }}
+              style={{
+                padding: '1rem 2rem',
+                fontSize: '1.2rem',
+                cursor: 'pointer',
+                marginTop: '1rem'
+              }}
+            >
+              Restart Chunk
+            </button>
+          )}
         </div>
       )}
 

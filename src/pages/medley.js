@@ -87,6 +87,12 @@ export default function Medley() {
     }
   };
 
+  const handleRestartChunk = () => {
+    // Restart the current chunk from the beginning
+    setCurrentMode(null);
+    setCompletedModes([]);
+  };
+
   const renderCurrentMode = () => {
     switch(currentMode) {
       case 'flashcards': 
@@ -97,7 +103,7 @@ export default function Medley() {
         return <MiniQuizMode cards={cards} onComplete={handleNext} />;
       case 'quiz': 
         console.log('Medley FullQuizMode - cards:', cards, 'chunk:', currentChunkId);
-        return <FullQuizMode cards={cards} onComplete={handleNext} />;
+        return <FullQuizMode cards={cards} onComplete={handleRestartChunk} />;
       default: 
         return <div>Mode selection</div>;
     }

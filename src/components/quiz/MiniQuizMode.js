@@ -41,6 +41,12 @@ export default function MiniQuizMode({
       // All cards completed - show completion screen
       console.log('Mini quiz completed');
       setQuizComplete(true);
+      // Auto-advance if in medley mode
+      if (onComplete) {
+        setTimeout(() => {
+          onComplete();
+        }, 1500);
+      }
     }
   }, [remainingCards, filteredCards, onComplete, cards.length, quizStarted]);
 
@@ -199,7 +205,8 @@ export default function MiniQuizMode({
     );
   }
 
-  if (quizComplete) {
+  if (quizComplete && !onComplete) {
+    // Only show restart button when NOT in medley mode
     return (
         <div>
         <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
@@ -214,6 +221,13 @@ export default function MiniQuizMode({
             Restart Quiz
           </button>
         </div>
+      </div>
+    );
+  } else if (quizComplete && onComplete) {
+    // In medley mode, show completion message briefly before auto-advance
+    return (
+      <div style={{ textAlign: 'center', padding: '2rem', fontSize: '1.5rem' }}>
+        Mini Quiz Complete! Moving to next mode...
       </div>
     );
   }

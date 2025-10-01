@@ -8,7 +8,8 @@ export default function FlashcardMode({
   practiceStarredOnly = false, 
   onToggleStarred = null, 
   starredCount = 0, 
-  totalCount = 0 
+  totalCount = 0,
+  onComplete = null
 }) {
   const [isReversed, setIsReversed] = useState(false);
 
@@ -89,6 +90,7 @@ export default function FlashcardMode({
       <div style={{
         display: 'flex',
         justifyContent: 'center',
+        gap: '1rem',
       }}>
         <button
           type="button"

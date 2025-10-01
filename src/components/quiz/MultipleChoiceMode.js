@@ -81,6 +81,12 @@ export default function MultipleChoiceMode({
         // Check if quiz is complete
         if (newRemainingCards.length === 0) {
           setQuizComplete(true);
+          // Auto-advance if in medley mode
+          if (onComplete) {
+            setTimeout(() => {
+              onComplete();
+            }, 1500);
+          }
           return;
         }
         
@@ -195,7 +201,8 @@ export default function MultipleChoiceMode({
     );
   }
 
-  if (quizComplete) {
+  if (quizComplete && !onComplete) {
+    // Only show restart button when NOT in medley mode
     return (
         <div>
         <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
@@ -212,6 +219,13 @@ export default function MultipleChoiceMode({
         </div>
       </div>
     );
+  } else if (quizComplete && onComplete) {
+    // In medley mode, show completion message briefly before auto-advance
+    return (
+      <div style={{ textAlign: 'center', padding: '2rem', fontSize: '1.5rem' }}>
+        Multiple Choice Complete! Moving to next mode...
+      </div>
+    );
   }
 
   if (!currentCard) {
@@ -221,6 +235,7 @@ export default function MultipleChoiceMode({
       </div>
     );
   }
+
 
   return (
     <div style={{ textAlign: 'center' }}>
