@@ -19,13 +19,14 @@ export default function Grouping() {
   const [swapped, setSwapped] = useState(false);
   // const [isFull, setIsFull] = useState(false);
 
-  // Fetch cards from the backend
-  useEffect(() => {
+  const fetchCards = () => {
+    console.log('Fetching cards for listId:', listId);
     if (!listId) return;
     fetch(`lists/${listId}/cards`)
       .then(res => res.json())
       .then(data => {
-        console.log('Fetched cards:', data);
+        // console.log('Fetched cards:', data);
+        // console.log('Number of cards:', data.length);
         if (data && Array.isArray(data)) {
           setCards(data);
           // Create groups based on number of cards (aim for 4-5 cards per group)
@@ -35,11 +36,15 @@ export default function Grouping() {
           const groupIds = Array.from({ length: numGroups }, (_, i) => i + 1); // 1, 2, 3, 4, etc.
           setContainers(groupIds);
           
-          // Initialize all cards as unassigned (null)
+          // Initialize card positions based on existing chunk_id from database
           const initialPositions = {};
           data.forEach(card => {
-            initialPositions[card.id] = null;
+            // Treat null/undefined chunk_id as 0 (unassigned)
+            const chunkId = card.chunk_id || 0;
+            initialPositions[card.id] = chunkId;
+            console.log(`Card ${card.id} (${card.term}): chunk_id = ${card.chunk_id} → ${chunkId}`);
           });
+          // console.log('Initial positions:', initialPositions);
           setCardPositions(initialPositions);
         } else {
           console.error('Expected array but got:', data);
@@ -50,12 +55,44 @@ export default function Grouping() {
         console.error('Failed to fetch cards', err);
         setCards([]);
       });
+  };
+
+  // Fetch cards from the backend
+  useEffect(() => {
+    fetchCards();
+  }, [listId]);
+
+  // Refetch cards when the page becomes visible (e.g., returning from edit page)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        fetchCards();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    // Also refetch when the window gains focus
+    const handleFocus = () => {
+      fetchCards();
+    };
+    
+    window.addEventListener('focus', handleFocus);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', handleFocus);
+    };
   }, [listId]);
 
   
-  const handleDragEnd = (event) => {
+  const handleDragEnd = async (event) => {
     const { active, over } = event;
     if (over) {
+      console.log('chunk_id on drop:', over.id);
+      // Determine the chunk_id to save (0 for unassigned, over.id for groups)
+      const chunkId = over.id === 'unassigned' ? 0 : over.id;
+      
       // Check if the target container already has 5 cards (if it's not the unassigned area)
       if (over.id !== 'unassigned') {
         const cardsInTarget = Object.values(cardPositions).filter(pos => pos === over.id).length;
@@ -63,23 +100,28 @@ export default function Grouping() {
           alert('Groups can have a maximum of 5 cards');
           return; // Don't allow the drop
         }
-        else {
-          const response = fetch(`/cards/${active.id}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ chunk_id: over.id }),
-          });
-          if (!response.ok) {
-            console.error('Failed to update card chunk');
-            return;
-          }
+      }
+      
+      // Always update the database with the new chunk_id
+      try {
+        const response = await fetch(`/cards/${active.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ chunk_id: chunkId }),
+        });
+        if (!response.ok) {
+          console.error('Failed to update card chunk');
+          return;
         }
+      } catch (error) {
+        console.error('Error updating card chunk:', error);
+        return;
       }
       
       // Update the position of the dragged card
       setCardPositions(prev => ({
         ...prev,
-        [active.id]: over.id === 'unassigned' ? null : over.id
+        [active.id]: chunkId
       }));
     }
   };
@@ -89,14 +131,10 @@ export default function Grouping() {
     alert('AI Sort functionality is not yet implemented.');
   };
 
-  // const swap = () => {
-  //   // Placeholder for swap functionality
-  //   alert('Swap Term and Definition functionality is not yet implemented.');
-  // };
 
   return (
     <div>
-      {/* Home and Medley Mode buttons */}
+      {/* Home and Navigation buttons */}
       <div style={{
         display: 'flex',
         alignItems: 'center',
@@ -109,10 +147,18 @@ export default function Grouping() {
             type="button"
             onClick={() => navigate('/')}
           > Home</button>
-          <button
-            type="button"
-            onClick={() => navigate('/medley')}
-          > Medley Mode</button>
+          
+          <div style={{ display: 'flex', gap: '1rem' }}>
+            <button
+              type="button"
+              onClick={fetchCards}
+              title="Refresh cards list"
+            > Refresh</button>
+            <button
+              type="button"
+              onClick={() => navigate('/medley', { state: { listId, listName } })}
+            > Medley Mode</button>
+          </div>
       </div>
 
       {/* Title and List Name */}
@@ -172,7 +218,7 @@ export default function Grouping() {
                 minHeight: '60px',
                 padding: '1rem'
               }}>
-                {cards.filter(card => cardPositions[card.id] === null).map(card => (
+                {cards.filter(card => (cardPositions[card.id] || 0) === 0).map(card => (
                   <Draggable key={card.id} id={card.id}>
                     <div>
                       {swapped ? card.translation : card.term}
@@ -198,7 +244,7 @@ export default function Grouping() {
                     {cards.filter(card => cardPositions[card.id] === id).map(card => (
                       <Draggable key={card.id} id={card.id}>
                         <div style={{ padding: '0.3rem'}}>
-                          {card.term}
+                          {swapped ? card.translation : card.term}
                         </div>
                       </Draggable>
                     ))}

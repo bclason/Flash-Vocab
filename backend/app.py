@@ -153,6 +153,7 @@ def update_card(id):
     correct_attempts = data.get('correct_attempts')
     total_attempts = data.get('total_attempts')
     starred = data.get('starred')
+    chunk_id = data.get('chunk_id')
 
     conn = get_db_connection()
     
@@ -164,13 +165,19 @@ def update_card(id):
         )
     # Handle single field updates (field-value format)
     elif field and value is not None:
-        allowed_fields = ['term', 'translation', 'secondary_translation', 'starred']
+        allowed_fields = ['term', 'translation', 'secondary_translation', 'starred', 'chunk_id']
         if field not in allowed_fields:
             conn.close()
             return jsonify({'error': f'Invalid field: {field}'}), 400
         
         query = f"UPDATE cards SET {field} = ? WHERE id = ?"
         conn.execute(query, (value, id))
+    # Handle chunk_id updates
+    elif chunk_id is not None:
+        conn.execute(
+            'UPDATE cards SET chunk_id = ? WHERE id = ?',
+            (chunk_id, id)
+        )
     # Handle direct field updates (for backward compatibility)
     elif term and translation:
         conn.execute(
