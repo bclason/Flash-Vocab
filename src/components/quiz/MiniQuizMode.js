@@ -17,6 +17,7 @@ export default function MiniQuizMode({
   const [quizStarted, setQuizStarted] = useState(false);
   const [quizComplete, setQuizComplete] = useState(false);
   const [totalAttempts, setTotalAttempts] = useState(0);
+  const [cardAccuracyUpdates, setCardAccuracyUpdates] = useState({});
 
   // Filter cards based on practiceStarredOnly prop
   const filteredCards = practiceStarredOnly 
@@ -32,14 +33,8 @@ export default function MiniQuizMode({
     }
   }, [cards, practiceStarredOnly]);
 
-  useEffect(() => {
-    // console.log('MiniQuizMode useEffect:', { 
-    //   remainingCardsLength: remainingCards.length, 
-    //   filteredCardsLength: filteredCards.length, 
-    //   cardsLength: cards.length,
-    //   quizStarted
-    // });
-    
+
+  useEffect(() => {    
     if (remainingCards.length > 0 && filteredCards.length > 0) {
       getRandomTerm();
     } else if (remainingCards.length === 0 && filteredCards.length > 0 && cards.length > 0 && quizStarted) {
@@ -49,15 +44,24 @@ export default function MiniQuizMode({
     }
   }, [remainingCards, filteredCards, onComplete, cards.length, quizStarted]);
 
+
   const getRandomTerm = () => {
     if (remainingCards.length === 0) return;
     const randomIndex = Math.floor(Math.random() * remainingCards.length);
     const selectedCard = remainingCards[randomIndex];
     
-    // Find the most up-to-date version of this card from the cards array
-    const upToDateCard = cards.find(card => card.id === selectedCard.id);
-    setCurrentTerm(upToDateCard || selectedCard);
+    // console.log(`getRandomTerm - Card ${selectedCard.id} original:`, selectedCard.correct_attempts, selectedCard.total_attempts);
+    // console.log(`getRandomTerm - Card ${selectedCard.id} updates:`, cardAccuracyUpdates[selectedCard.id]);
+    
+    // Apply any accuracy updates we've tracked for this card
+    const updatedCard = cardAccuracyUpdates[selectedCard.id] 
+      ? { ...selectedCard, ...cardAccuracyUpdates[selectedCard.id] }
+      : selectedCard;
+      
+    // console.log(`getRandomTerm - Card ${selectedCard.id} final:`, updatedCard.correct_attempts, updatedCard.total_attempts);
+    setCurrentTerm(updatedCard);
   }
+
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -69,32 +73,34 @@ export default function MiniQuizMode({
     const correctAnswerLower = correctAnswer.toLowerCase().trim();
     const secondaryAnswerLower = secondaryAnswer ? secondaryAnswer.toLowerCase().trim() : '';
     
+    setTotalAttempts(prev => prev + 1);
+    
     if (answerLower === correctAnswerLower || (secondaryAnswerLower && answerLower === secondaryAnswerLower)) {
       new Audio(correctSound).play();
       setStatus('correct');
+      const updatedTerm = updateAccuracy(true);
       setTimeout(() => {
         setAnswer('');
         setRemainingCards(prev => prev.filter(card => card.id !== currentTerm.id));
         setStatus(null);
       }, 300);
-      updateAccuracy(true);
-      setTotalAttempts(prev => prev + 1);
     } else {
       // incorrect
       new Audio(incorrectSound).play();
       setStatus('incorrect');
+      const updatedTerm = updateAccuracy(false);
       setTimeout(() => {
         alert(`Incorrect! The correct answer was: ${correctAnswer}`);
       }, 300);
       setTimeout(() => {
         setAnswer('');
-        getRandomTerm(); // Try the same term again or get a new one
+        // Get a new random term after incorrect answer
+        getRandomTermWithUpdatedAccuracy(updatedTerm);
         setStatus(null);
       }, 300);
-      updateAccuracy(false);
-      setTotalAttempts(prev => prev + 1);
     }
   }
+
 
   const handleRestart = () => {
     setRemainingCards([...filteredCards]);
@@ -103,41 +109,78 @@ export default function MiniQuizMode({
     setAnswer('');
     setStatus(null);
     setTotalAttempts(0);
+    // Don't reset cardAccuracyUpdates - keep previous quiz accuracy intact
   };
 
-  const updateAccuracy = (correct) => {
-    // Use functional state update to get the most current values
-    setCurrentTerm(prevTerm => {
-      const new_correct = correct ? prevTerm.correct_attempts + 1 : prevTerm.correct_attempts;
-      const new_total = prevTerm.total_attempts + 1;
-      
-      console.log(`BEFORE: correct_attempts=${prevTerm.correct_attempts}, total_attempts=${prevTerm.total_attempts}`);
-      console.log(`CALCULATING: correct=${correct}, new_correct=${new_correct}, new_total=${new_total}`);
-      
-      // Update the database
-      fetch(`/cards/${prevTerm.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ correct_attempts: new_correct, total_attempts: new_total }),
-      })
-      .then(response => {
-        if (!response.ok) {
-          throw new Error('Failed to update accuracy');
-        }
-        console.log(`DATABASE UPDATED: correct_attempts=${new_correct}, total_attempts=${new_total}`);
-      })
-      .catch(error => console.error('Error updating accuracy:', error));
 
-      // Return the updated current term
-      const updatedTerm = {
-        ...prevTerm,
-        correct_attempts: new_correct,
-        total_attempts: new_total
+  const updateAccuracy = (correct) => {
+    if (!currentTerm) return currentTerm;
+    
+    const old_correct = currentTerm.correct_attempts || 0;
+    const old_total = currentTerm.total_attempts || 0;
+    const new_correct = correct ? old_correct + 1 : old_correct;
+    const new_total = old_total + 1;
+    
+    const old_percentage = old_total > 0 ? ((old_correct / old_total) * 100).toFixed(1) : 'N/A';
+    const new_percentage = (new_correct / new_total * 100).toFixed(1);
+    
+    // console.log(`MINI - Card ${currentTerm.id} (${currentTerm.term}):`);
+    // console.log(`  Before: ${old_correct}/${old_total} = ${old_percentage}%`);
+    // console.log(`  Answer: ${correct ? 'CORRECT' : 'INCORRECT'}`);
+    // console.log(`  After:  ${new_correct}/${new_total} = ${new_percentage}%`);
+    
+    // Update the database
+    fetch(`/cards/${currentTerm.id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ correct_attempts: new_correct, total_attempts: new_total }),
+    })
+    .then(response => {
+      if (!response.ok) {
+        throw new Error('Failed to update accuracy');
+      }
+      // console.log(`MINI - Database updated successfully`);
+    })
+    .catch(error => console.error('Error updating accuracy:', error));
+
+    // Create the updated term
+    const updatedTerm = {
+      ...currentTerm,
+      correct_attempts: new_correct,
+      total_attempts: new_total
+    };
+    
+    setCurrentTerm(updatedTerm);
+    
+    // Track accuracy updates for this card
+    setCardAccuracyUpdates(prev => {
+      const newUpdates = {
+        ...prev,
+        [currentTerm.id]: {
+          correct_attempts: new_correct,
+          total_attempts: new_total
+        }
       };
-      
-      console.log(`AFTER STATE UPDATE: correct_attempts=${updatedTerm.correct_attempts}, total_attempts=${updatedTerm.total_attempts}`);
-      return updatedTerm;
+      // console.log(`Storing accuracy updates:`, newUpdates);
+      return newUpdates;
     });
+    
+    return updatedTerm;
+  }
+
+  const getRandomTermWithUpdatedAccuracy = (updatedCurrentTerm) => {
+    if (remainingCards.length === 0) return;
+    
+    // Update the remainingCards array with the new accuracy for the current term
+    const updatedRemainingCards = remainingCards.map(card => 
+      card.id === updatedCurrentTerm.id ? updatedCurrentTerm : card
+    );
+    
+    const randomIndex = Math.floor(Math.random() * updatedRemainingCards.length);
+    const selectedCard = updatedRemainingCards[randomIndex];
+    
+    // console.log(`getRandomTermWithUpdatedAccuracy - Card ${selectedCard.id}:`, selectedCard.correct_attempts, selectedCard.total_attempts);
+    setCurrentTerm(selectedCard);
   }
 
   if (cards.length === 0) {

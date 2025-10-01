@@ -68,6 +68,9 @@ export default function MultipleChoiceMode({
       setScore(prev => prev + 1);
     }
 
+    // Update accuracy for this card
+    updateAccuracy(currentCard, isCorrect);
+
     // Auto advance after 1.5 seconds
     setTimeout(() => {
       if (isCorrect) {
@@ -97,7 +100,7 @@ export default function MultipleChoiceMode({
       // Reset the result display state for the next question
       setShowResult(false);
       setSelectedAnswer(null);
-    }, 1500);
+    }, 1000);
   };
 
   const handleRestart = () => {
@@ -108,6 +111,27 @@ export default function MultipleChoiceMode({
     setQuizComplete(false);
     setShowResult(false);
     setSelectedAnswer(null);
+  };
+
+  const updateAccuracy = (card, correct) => {
+    const new_correct = correct ? card.correct_attempts + 1 : card.correct_attempts;
+    const new_total = card.total_attempts + 1;
+    
+    console.log(`MCQ - Card ${card.id}: correct=${correct}, new_correct=${new_correct}, new_total=${new_total}`);
+    
+    // Update the database
+    fetch(`/cards/${card.id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ correct_attempts: new_correct, total_attempts: new_total }),
+    })
+    .then(response => {
+      if (!response.ok) {
+        throw new Error('Failed to update accuracy');
+      }
+      console.log(`MCQ - Database updated for card ${card.id}: ${new_correct}/${new_total}`);
+    })
+    .catch(error => console.error('Error updating accuracy:', error));
   };
 
   const getButtonStyle = (choice) => {

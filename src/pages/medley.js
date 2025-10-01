@@ -6,6 +6,9 @@ import FullQuizMode from '../components/quiz/FullQuizMode';
 import MultipleChoiceMode from '../components/quiz/MultipleChoiceMode';
 
 // check if accuracy is being updated properly in medley mode
+// flash quiz in both doesnt update accuracy
+// quiz does in both
+// after quiz, make button for restart chunk
 
 export default function Medley() {
   const navigate = useNavigate();
@@ -27,7 +30,6 @@ export default function Medley() {
   // Fetch all cards and determine available chunks
   useEffect(() => {
     if (!listId) return;
-    
     fetch(`lists/${listId}/cards`)
       .then(res => res.json())
       .then(data => {
@@ -54,14 +56,13 @@ export default function Medley() {
       });
   }, [listId, passedChunkId]);
 
+
   // Update cards when chunk changes
   useEffect(() => {
     const chunkCards = allCards.filter(card => card.chunk_id === currentChunkId);
     setCards(chunkCards);
     console.log(`Cards for chunk ${currentChunkId}:`, chunkCards);
   }, [allCards, currentChunkId]);
-
-
 
 
   const handleNext = () => {
@@ -79,6 +80,9 @@ export default function Medley() {
         setCompletedModes([]);
       } else {
         alert('You have completed all chunks in this list!');
+        setCurrentChunkId(availableChunks[0]);
+        setCurrentMode(null);
+        setCompletedModes([]);
       }
     }
   };
@@ -115,6 +119,14 @@ export default function Medley() {
             onClick={() => navigate('/')}
           > Home</button>
           
+          {!currentMode && (
+            <button
+              type="button"
+              onClick={() => navigate('/grouping', { state: { listId, listName } })}
+            >
+              Chunking
+            </button>
+          )}
           {currentMode && (
             <button
               type="button"
@@ -123,6 +135,7 @@ export default function Medley() {
               Next
             </button>
           )}
+
       </div>
 
         {/* Title and Chunk Selection */}
@@ -135,59 +148,7 @@ export default function Medley() {
             fontWeight: 'bolder',
             marginBottom: '1rem',
           }}>Medley Mode: {listName} Chunk {currentChunkId}</h1>
-          
-          {/* Chunk Navigation
-          {availableChunks.length > 1 && (
-            <div style={{
-              display: 'flex',
-              justifyContent: 'center',
-              alignItems: 'center',
-              gap: '1rem',
-              fontSize: '24px',
-              marginBottom: '1rem',
-            }}>
-              <button 
-                onClick={() => {
-                  const currentIndex = availableChunks.indexOf(currentChunkId);
-                  if (currentIndex > 0) {
-                    setCurrentChunkId(availableChunks[currentIndex - 1]);
-                    setCurrentMode(null); // Reset to start screen
-                  }
-                }}
-                disabled={availableChunks.indexOf(currentChunkId) === 0}
-                style={{ fontSize: '18px', padding: '0.5rem 1rem' }}
-              >
-                ← Previous Chunk
-              </button>
-              
-              <span style={{ fontWeight: 'bold' }}>
-                Chunk {currentChunkId} ({cards.length} cards)
-              </span>
-              
-              <button 
-                onClick={() => {
-                  const currentIndex = availableChunks.indexOf(currentChunkId);
-                  if (currentIndex < availableChunks.length - 1) {
-                    setCurrentChunkId(availableChunks[currentIndex + 1]);
-                    setCurrentMode(null); // Reset to start screen
-                  }
-                }}
-                disabled={availableChunks.indexOf(currentChunkId) === availableChunks.length - 1}
-                style={{ fontSize: '18px', padding: '0.5rem 1rem' }}
-              >
-                Next Chunk →
-              </button>
-            </div>
-          )} */}
-          
-          {availableChunks.length === 1 && (
-            <p style={{ fontSize: '24px', fontWeight: 'bold' }}>
-              Chunk {currentChunkId} ({cards.length} cards)
-            </p>
-          )}
         </div>
-
-
 
         {/* Description - only show when no mode is active */}
         {currentMode === null && (
@@ -197,7 +158,7 @@ export default function Medley() {
             marginLeft: '1.75rem',
             marginRight: '1.75rem',
           }}>
-            Practice each chunk individually with a combination of flashcard, multiple-choice, flash quiz, and full quiz modes.
+            Practice each chunk individually with a combination of flashcard, multiple-choice, flash quiz, and full quiz modes. Click Chunking to assign or adjust groups.
           </p>
         )}
 
@@ -217,10 +178,6 @@ export default function Medley() {
             {renderCurrentMode()}
           </div>
         )}
-
-
-
-
     </div>
   );
 }

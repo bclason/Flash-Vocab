@@ -19,14 +19,13 @@ export default function Grouping() {
   const [swapped, setSwapped] = useState(false);
   // const [isFull, setIsFull] = useState(false);
 
-  const fetchCards = () => {
-    console.log('Fetching cards for listId:', listId);
+  // Fetch cards from the backend
+  useEffect(() => {
     if (!listId) return;
     fetch(`lists/${listId}/cards`)
       .then(res => res.json())
       .then(data => {
         // console.log('Fetched cards:', data);
-        // console.log('Number of cards:', data.length);
         if (data && Array.isArray(data)) {
           setCards(data);
           // Create groups based on number of cards (aim for 4-5 cards per group)
@@ -39,12 +38,8 @@ export default function Grouping() {
           // Initialize card positions based on existing chunk_id from database
           const initialPositions = {};
           data.forEach(card => {
-            // Treat null/undefined chunk_id as 0 (unassigned)
-            const chunkId = card.chunk_id || 0;
-            initialPositions[card.id] = chunkId;
-            console.log(`Card ${card.id} (${card.term}): chunk_id = ${card.chunk_id} → ${chunkId}`);
+            initialPositions[card.id] = card.chunk_id;
           });
-          // console.log('Initial positions:', initialPositions);
           setCardPositions(initialPositions);
         } else {
           console.error('Expected array but got:', data);
@@ -55,34 +50,6 @@ export default function Grouping() {
         console.error('Failed to fetch cards', err);
         setCards([]);
       });
-  };
-
-  // Fetch cards from the backend
-  useEffect(() => {
-    fetchCards();
-  }, [listId]);
-
-  // Refetch cards when the page becomes visible (e.g., returning from edit page)
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible') {
-        fetchCards();
-      }
-    };
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    
-    // Also refetch when the window gains focus
-    const handleFocus = () => {
-      fetchCards();
-    };
-    
-    window.addEventListener('focus', handleFocus);
-
-    return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-      window.removeEventListener('focus', handleFocus);
-    };
   }, [listId]);
 
   
@@ -134,7 +101,7 @@ export default function Grouping() {
 
   return (
     <div>
-      {/* Home and Navigation buttons */}
+      {/* Home and Medley Mode buttons */}
       <div style={{
         display: 'flex',
         alignItems: 'center',
@@ -147,18 +114,10 @@ export default function Grouping() {
             type="button"
             onClick={() => navigate('/')}
           > Home</button>
-          
-          <div style={{ display: 'flex', gap: '1rem' }}>
-            <button
-              type="button"
-              onClick={fetchCards}
-              title="Refresh cards list"
-            > Refresh</button>
-            <button
-              type="button"
-              onClick={() => navigate('/medley', { state: { listId, listName } })}
-            > Medley Mode</button>
-          </div>
+          <button
+            type="button"
+            onClick={() => navigate('/medley', { state: { listId, listName } })}
+          > Medley Mode</button>
       </div>
 
       {/* Title and List Name */}
@@ -218,7 +177,7 @@ export default function Grouping() {
                 minHeight: '60px',
                 padding: '1rem'
               }}>
-                {cards.filter(card => (cardPositions[card.id] || 0) === 0).map(card => (
+                {cards.filter(card => cardPositions[card.id] === 0).map(card => (
                   <Draggable key={card.id} id={card.id}>
                     <div>
                       {swapped ? card.translation : card.term}
