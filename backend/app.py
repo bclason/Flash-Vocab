@@ -4,11 +4,15 @@ from flask_cors import CORS
 import sqlite3
 from models import init_db
 import datetime
+from dotenv import load_dotenv
+import os
 
+# Load environment variables from .env file
+load_dotenv()
 
 app = Flask(__name__)
 CORS(app)
-#client = OpenAI()
+client = OpenAI()  # Will automatically use OPENAI_API_KEY from environment
 
 init_db()
 
@@ -221,36 +225,49 @@ def reset_list_accuracy(list_id):
 # Group words using OpenAI (from AISorting.py)
 @app.route('/group-words', methods=['POST'])
 def group_words():
-    data = request.get_json()
-    words = data.get('words', [])
-    if not isinstance(words, list) or not all(isinstance(w, str) for w in words):
-        return jsonify({'error': 'Invalid input, expected a list of words'}), 400
+    try:
+        data = request.get_json()
+        words = data.get('words', [])
+        if not isinstance(words, list) or not all(isinstance(w, str) for w in words):
+            return jsonify({'error': 'Invalid input, expected a list of words'}), 400
 
-    prompt = f"""
-    Group these words into sets of 4–5 based on similarity
-    (meaning, function, or spelling).
-    Return valid JSON only, in the format:
-    {{
-        \"groups\": [
-            [\"word1\", \"word2\", \"word3\"],
-            [\"word4\", \"word5\", \"word6\"]
-        ]
-    }}
+        print(f"Received words for grouping: {words}")
 
-    Words: {words}
-    """
+        # Create a cleaner prompt without problematic Unicode characters
+        prompt = f"""You are a JSON generator. Your task is to group all of the given words into sets of 4–6 items each. 
+Important rules:
+1. Every word must appear in exactly one group. 
+2. No group may have fewer than 4 or more than 6 items. 
+3. Do not add or remove words. 
+4. Return valid JSON only, with no commentary, in this exact format:
+{{
+  "groups": [
+    ["word1", "word2", "word3", "word4"],
+    ["word5", "word6", "word7", "word8"]
+  ]
+}}
 
-    response = client.chat.completions.create(
-        model="gpt-4o-mini",
-        messages=[{"role": "user", "content": prompt}],
-        response_format={"type": "json_object"}
-    )
+Words to group: {words}"""
 
-    # Print full response to see what's happening (for debugging)
-    print(response)
+        print("Sending request to OpenAI...")
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[{"role": "user", "content": prompt}],
+            response_format={"type": "json_object"}
+        )
 
-    # Parsed JSON is already a Python dict
-    return jsonify(response.choices[0].message.parsed)
+        print("OpenAI response received")
+        print(f"Response content: {response.choices[0].message.content}")
+
+        # Parse the JSON content manually since .parsed might not be available
+        import json
+        result = json.loads(response.choices[0].message.content)
+        
+        return jsonify(result)
+        
+    except Exception as e:
+        print(f"Error in group_words: {str(e)}")
+        return jsonify({'error': f'Internal server error: {str(e)}'}), 500
 
 
 if __name__ == '__main__':

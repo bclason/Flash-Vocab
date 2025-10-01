@@ -93,9 +93,90 @@ export default function Grouping() {
     }
   };
 
-  const AIsort = () => {
-    // Placeholder for AI sorting functionality
-    alert('AI Sort functionality is not yet implemented.');
+  const AIsort = async () => {
+    try {
+      // Extract words based on what's currently displayed (term or translation)
+      const words = cards.map(card => swapped ? card.translation : card.term);
+      
+      if (words.length === 0) {
+        alert('No cards to sort!');
+        return;
+      }
+
+      // Send words to backend for AI grouping
+      const response = await fetch('http://localhost:5000/group-words', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ words: words }),
+      });
+
+      if (!response.ok) {
+        console.error('Failed to get AI grouping');
+        alert('Failed to get AI grouping. Please try again.');
+        return;
+      }
+
+      const aiResponse = await response.json();
+      console.log('AI grouping response:', aiResponse);
+
+      // Parse the AI response and create new card positions
+      const newCardPositions = {};
+      const groups = aiResponse.groups || [];
+      
+      // Update containers to match the number of AI-generated groups
+      const numAIGroups = groups.length;
+      const newContainers = Array.from({ length: numAIGroups }, (_, i) => i + 1);
+      setContainers(newContainers);
+      
+      // First, set all cards to unassigned (0)
+      cards.forEach(card => {
+        newCardPositions[card.id] = 0;
+      });
+
+      // Then assign cards to groups based on AI suggestions
+      groups.forEach((group, groupIndex) => {
+        const groupId = groupIndex + 1; // Groups are numbered 1, 2, 3, etc.
+        
+        group.forEach(wordFromAI => {
+          // Find the card that matches this word (based on what was sent to AI)
+          const matchingCard = cards.find(card => 
+            swapped ? card.translation === wordFromAI : card.term === wordFromAI
+          );
+          if (matchingCard) {
+            newCardPositions[matchingCard.id] = groupId;
+          }
+        });
+      });
+
+      // Update all cards in the database with their new chunk_ids
+      const updatePromises = cards.map(async (card) => {
+        const newChunkId = newCardPositions[card.id];
+        try {
+          const response = await fetch(`/cards/${card.id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ chunk_id: newChunkId }),
+          });
+          if (!response.ok) {
+            console.error(`Failed to update card ${card.id}`);
+          }
+        } catch (error) {
+          console.error(`Error updating card ${card.id}:`, error);
+        }
+      });
+
+      // Wait for all updates to complete
+      await Promise.all(updatePromises);
+
+      // Update the frontend state
+      setCardPositions(newCardPositions);
+      
+      alert('AI sorting completed successfully!');
+      
+    } catch (error) {
+      console.error('Error during AI sorting:', error);
+      alert('An error occurred during AI sorting. Please try again.');
+    }
   };
 
 
