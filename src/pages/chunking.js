@@ -6,18 +6,16 @@ import Draggable from '../hooks/draggable';
 
 
 
-export default function Grouping() {
+export default function Chunking() {
   const navigate = useNavigate();
   const { state } = useLocation();
   const listId = state?.listId;
   const listName = state?.listName;
 
   const [cards, setCards] = useState([]);
-  const [isDropped, setIsDropped] = useState(false);
   const [containers, setContainers] = useState([]);
   const [cardPositions, setCardPositions] = useState({}); // Track which container each card is in
   const [swapped, setSwapped] = useState(false);
-  // const [isFull, setIsFull] = useState(false);
 
   // Fetch cards from the backend
   useEffect(() => {
@@ -63,8 +61,8 @@ export default function Grouping() {
       // Check if the target container already has 5 cards (if it's not the unassigned area)
       if (over.id !== 'unassigned') {
         const cardsInTarget = Object.values(cardPositions).filter(pos => pos === over.id).length;
-        if (cardsInTarget >= 5) {
-          alert('Groups can have a maximum of 5 cards');
+        if (cardsInTarget >= 6) {
+          alert('Groups can have a maximum of 6 cards');
           return; // Don't allow the drop
         }
       }
@@ -216,7 +214,7 @@ export default function Grouping() {
         marginLeft: '1.75rem',
         marginRight: '1.75rem',
       }}>
-        Grouping terms into small related groups or "chunks" can improve memory retention. Manually group terms in chunks of 4-5 or automatically group with AI. Once grouped, practice one chunk at a time in Medley mode.
+        Grouping terms into small related groups or "chunks" can improve memory retention. Manually group terms in chunks of 4-6 or automatically group with AI. Once grouped, practice one chunk at a time in Medley mode.
       </p>
 
       {/* Buttons */}
@@ -226,7 +224,7 @@ export default function Grouping() {
       }}>
         <div style={{
           display: 'flex',
-          marginLeft: '2rem'
+          marginLeft: '1.5rem'
           }}>
           <button onClick={AIsort} style={{ fontSize: '1.5rem', padding: '0.5rem 1rem' }}>
             AI Sort
@@ -244,7 +242,7 @@ export default function Grouping() {
       </div>
       <div>
 
-      <div style={{ marginTop: '2rem' }}>
+      <div style={{ marginTop: '2rem', marginLeft: '.55rem', marginRight: '.55rem' }}>
         <DndContext onDragEnd={handleDragEnd}>
           {/* Unassigned cards */}
           <div style={{ marginBottom: '2rem' }}>

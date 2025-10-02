@@ -1,7 +1,7 @@
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { useStarredFilter } from '../hooks/useStarredFilter';
-import FullQuizMode from '../components/quiz/FullQuizMode';
+import FullQuizMode from '../components/medleyModes/FullQuizMode';
 
 export default function Quiz() {
   const navigate = useNavigate();

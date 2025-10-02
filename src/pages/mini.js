@@ -1,7 +1,7 @@
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { useStarredFilter } from '../hooks/useStarredFilter';
-import MiniQuizMode from '../components/quiz/MiniQuizMode';
+import MiniQuizMode from '../components/medleyModes/MiniQuizMode';
 
 export default function MiniQuiz() {
   const navigate = useNavigate();

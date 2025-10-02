@@ -85,7 +85,7 @@ export default function Dashboard() {
       })
       .then(data => {
         const listName = data.name;
-        navigate('/grouping', { state: { listName: listName, listId: id } });
+        navigate('/chunking', { state: { listName: listName, listId: id } });
       })
       .catch(err => console.error('Error fetching list:', err));
   };

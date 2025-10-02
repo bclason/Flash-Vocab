@@ -7,7 +7,7 @@ import Edit from './pages/edit';
 import Flashcards from './pages/flashcards';
 import MiniQuiz from './pages/mini';
 import Quiz from './pages/quiz';
-import Grouping from './pages/grouping';
+import Chunking from './pages/chunking';
 import Medley from './pages/medley';
 
 export default function App() {
@@ -19,7 +19,7 @@ export default function App() {
         <Route path="/flashcards" element={<Flashcards />} />
         <Route path="/mini" element={<MiniQuiz />} />
         <Route path="/quiz" element={<Quiz />} />
-        <Route path="/grouping" element={<Grouping />} />
+        <Route path="/chunking" element={<Chunking />} />
         <Route path="/medley" element={<Medley />} />
       </Routes>
     </Router>

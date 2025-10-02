@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 
 export default function MultipleChoiceMode({ 
   cards, 
-  listName, 
   onComplete = null,
 }) {
   const [remainingCards, setRemainingCards] = useState([...cards]);
@@ -83,9 +82,7 @@ export default function MultipleChoiceMode({
           setQuizComplete(true);
           // Auto-advance if in medley mode
           if (onComplete) {
-            setTimeout(() => {
-              onComplete();
-            }, 1500);
+            onComplete();
           }
           return;
         }
@@ -221,11 +218,11 @@ export default function MultipleChoiceMode({
     );
   } else if (quizComplete && onComplete) {
     // In medley mode, show completion message briefly before auto-advance
-    return (
-      <div style={{ textAlign: 'center', padding: '2rem', fontSize: '1.5rem' }}>
-        Multiple Choice Complete! Moving to next mode...
-      </div>
-    );
+    // return (
+    //   <div style={{ textAlign: 'center', padding: '2rem', fontSize: '1.5rem' }}>
+    //     Multiple Choice Complete! Moving to next mode...
+    //   </div>
+    // );
   }
 
   if (!currentCard) {

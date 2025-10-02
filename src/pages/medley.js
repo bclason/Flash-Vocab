@@ -1,9 +1,9 @@
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useState, useEffect } from 'react';
-import FlashcardMode from '../components/quiz/FlashcardMode';
-import MiniQuizMode from '../components/quiz/MiniQuizMode';
-import FullQuizMode from '../components/quiz/FullQuizMode';
-import MultipleChoiceMode from '../components/quiz/MultipleChoiceMode';
+import FlashcardMode from '../components/medleyModes/FlashcardMode';
+import MiniQuizMode from '../components/medleyModes/MiniQuizMode';
+import FullQuizMode from '../components/medleyModes/FullQuizMode';
+import MultipleChoiceMode from '../components/medleyModes/MultipleChoiceMode';
 
 // check if accuracy is being updated properly in medley mode
 // flash quiz in both doesnt update accuracy

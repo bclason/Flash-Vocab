@@ -1,13 +1,13 @@
 import { useState, useEffect } from 'react';
 import correctSound from '../correct.mp3';
 import incorrectSound from '../incorrect.mp3';
-import Medley from '../../pages/medley';
+
+// when starred messed up, switching terms with each input
 
 export default function MiniQuizMode({ 
   cards, 
   practiceStarredOnly = false, 
   onComplete = null,
-  medley,
 }) {
   const [remainingCards, setRemainingCards] = useState([]); // Cards that haven't been done yet
   const [answer, setAnswer] = useState('');
@@ -34,21 +34,15 @@ export default function MiniQuizMode({
   }, [cards, practiceStarredOnly]);
 
 
-  useEffect(() => {    
+  useEffect(() => {
     if (remainingCards.length > 0 && filteredCards.length > 0) {
       getRandomTerm();
-    } else if (remainingCards.length === 0 && filteredCards.length > 0 && cards.length > 0 && quizStarted) {
-      // All cards completed - show completion screen
+    } else if (remainingCards.length === 0 && filteredCards.length > 0 && quizStarted && !quizComplete) {
+      // Quiz completed - set completion state
       console.log('Mini quiz completed');
       setQuizComplete(true);
-      // Auto-advance if in medley mode
-      if (onComplete) {
-        setTimeout(() => {
-          onComplete();
-        }, 1500);
-      }
     }
-  }, [remainingCards, filteredCards, onComplete, cards.length, quizStarted]);
+  }, [remainingCards]);
 
 
   const getRandomTerm = () => {
@@ -56,15 +50,11 @@ export default function MiniQuizMode({
     const randomIndex = Math.floor(Math.random() * remainingCards.length);
     const selectedCard = remainingCards[randomIndex];
     
-    // console.log(`getRandomTerm - Card ${selectedCard.id} original:`, selectedCard.correct_attempts, selectedCard.total_attempts);
-    // console.log(`getRandomTerm - Card ${selectedCard.id} updates:`, cardAccuracyUpdates[selectedCard.id]);
-    
     // Apply any accuracy updates we've tracked for this card
     const updatedCard = cardAccuracyUpdates[selectedCard.id] 
       ? { ...selectedCard, ...cardAccuracyUpdates[selectedCard.id] }
       : selectedCard;
       
-    // console.log(`getRandomTerm - Card ${selectedCard.id} final:`, updatedCard.correct_attempts, updatedCard.total_attempts);
     setCurrentTerm(updatedCard);
   }
 
@@ -100,8 +90,7 @@ export default function MiniQuizMode({
       }, 300);
       setTimeout(() => {
         setAnswer('');
-        // Get a new random term after incorrect answer
-        getRandomTermWithUpdatedAccuracy(updatedTerm);
+        // New term will be selected automatically by useEffect when remainingCards updates
         setStatus(null);
       }, 300);
     }
@@ -126,15 +115,7 @@ export default function MiniQuizMode({
     const old_total = currentTerm.total_attempts || 0;
     const new_correct = correct ? old_correct + 1 : old_correct;
     const new_total = old_total + 1;
-    
-    const old_percentage = old_total > 0 ? ((old_correct / old_total) * 100).toFixed(1) : 'N/A';
-    const new_percentage = (new_correct / new_total * 100).toFixed(1);
-    
-    // console.log(`MINI - Card ${currentTerm.id} (${currentTerm.term}):`);
-    // console.log(`  Before: ${old_correct}/${old_total} = ${old_percentage}%`);
-    // console.log(`  Answer: ${correct ? 'CORRECT' : 'INCORRECT'}`);
-    // console.log(`  After:  ${new_correct}/${new_total} = ${new_percentage}%`);
-    
+
     // Update the database
     fetch(`/cards/${currentTerm.id}`, {
       method: 'PUT',
@@ -167,26 +148,9 @@ export default function MiniQuizMode({
           total_attempts: new_total
         }
       };
-      // console.log(`Storing accuracy updates:`, newUpdates);
       return newUpdates;
     });
-    
     return updatedTerm;
-  }
-
-  const getRandomTermWithUpdatedAccuracy = (updatedCurrentTerm) => {
-    if (remainingCards.length === 0) return;
-    
-    // Update the remainingCards array with the new accuracy for the current term
-    const updatedRemainingCards = remainingCards.map(card => 
-      card.id === updatedCurrentTerm.id ? updatedCurrentTerm : card
-    );
-    
-    const randomIndex = Math.floor(Math.random() * updatedRemainingCards.length);
-    const selectedCard = updatedRemainingCards[randomIndex];
-    
-    // console.log(`getRandomTermWithUpdatedAccuracy - Card ${selectedCard.id}:`, selectedCard.correct_attempts, selectedCard.total_attempts);
-    setCurrentTerm(selectedCard);
   }
 
   if (cards.length === 0) {
@@ -205,7 +169,10 @@ export default function MiniQuizMode({
     );
   }
 
-  if (quizComplete && !onComplete) {
+  if (quizComplete && onComplete) {
+    // In medley mode, show completion message briefly before auto-advance
+    onComplete();
+  } else if (quizComplete && !onComplete) {
     // Only show restart button when NOT in medley mode
     return (
         <div>
@@ -221,13 +188,6 @@ export default function MiniQuizMode({
             Restart Quiz
           </button>
         </div>
-      </div>
-    );
-  } else if (quizComplete && onComplete) {
-    // In medley mode, show completion message briefly before auto-advance
-    return (
-      <div style={{ textAlign: 'center', padding: '2rem', fontSize: '1.5rem' }}>
-        Mini Quiz Complete! Moving to next mode...
       </div>
     );
   }

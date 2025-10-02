@@ -1,7 +1,7 @@
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { useStarredFilter } from '../hooks/useStarredFilter';
-import FlashcardMode from '../components/quiz/FlashcardMode';
+import FlashcardMode from '../components/medleyModes/FlashcardMode';
 
 
 
