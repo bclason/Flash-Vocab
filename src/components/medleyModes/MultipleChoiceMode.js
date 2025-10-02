@@ -9,10 +9,9 @@ export default function MultipleChoiceMode({
   const [choices, setChoices] = useState([]);
   const [selectedAnswer, setSelectedAnswer] = useState(null);
   const [showResult, setShowResult] = useState(false);
-  const [score, setScore] = useState(0);
-  const [totalAttempts, setTotalAttempts] = useState(0);
   const [isReversed, setIsReversed] = useState(false);
   const [quizComplete, setQuizComplete] = useState(false);
+  const [cardAttempts, setCardAttempts] = useState({}); // Track attempts per card
   
   const currentCard = remainingCards[currentCardIndex];
 
@@ -38,8 +37,6 @@ export default function MultipleChoiceMode({
   useEffect(() => {
     setRemainingCards([...cards]);
     setCurrentCardIndex(0);
-    setScore(0);
-    setTotalAttempts(0);
     setQuizComplete(false);
   }, [cards]);
 
@@ -58,14 +55,9 @@ export default function MultipleChoiceMode({
 
     setSelectedAnswer(choice);
     setShowResult(true);
-    setTotalAttempts(prev => prev + 1);
 
     const correctAnswer = isReversed ? currentCard.term : currentCard.translation;
     const isCorrect = choice === correctAnswer;
-    
-    if (isCorrect) {
-      setScore(prev => prev + 1);
-    }
 
     // Update accuracy for this card
     updateAccuracy(currentCard, isCorrect);
@@ -108,17 +100,31 @@ export default function MultipleChoiceMode({
   const handleRestart = () => {
     setRemainingCards([...cards]);
     setCurrentCardIndex(0);
-    setScore(0);
-    setTotalAttempts(0);
     setQuizComplete(false);
     setShowResult(false);
     setSelectedAnswer(null);
+    setCardAttempts({}); // Reset session tracking
   };
 
 
   const updateAccuracy = (card, correct) => {
-    const new_correct = correct ? card.correct_attempts + 1 : card.correct_attempts;
-    const new_total = card.total_attempts + 1;    
+    // Get current attempts for this card (including session updates)
+    const currentAttempts = cardAttempts[card.id] || { 
+      correct: card.correct_attempts || 0, 
+      total: card.total_attempts || 0 
+    };
+    
+    const new_correct = correct ? currentAttempts.correct + 1 : currentAttempts.correct;
+    const new_total = currentAttempts.total + 1;
+    
+    // Update our session tracking
+    setCardAttempts(prev => ({
+      ...prev,
+      [card.id]: { correct: new_correct, total: new_total }
+    }));
+    
+    console.log(`MCQ - Card ${card.id}: correct=${correct}, new_correct=${new_correct}, new_total=${new_total}`);
+    
     // Update the database
     fetch(`/cards/${card.id}`, {
       method: 'PUT',
@@ -129,6 +135,7 @@ export default function MultipleChoiceMode({
       if (!response.ok) {
         throw new Error('Failed to update accuracy');
       }
+      console.log(`MCQ - Database updated for card ${card.id}: ${new_correct}/${new_total}`);
     })
     .catch(error => console.error('Error updating accuracy:', error));
   };

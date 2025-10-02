@@ -16,7 +16,6 @@ export default function MiniQuizMode({
   const [isReversed, setIsReversed] = useState(false);
   const [quizStarted, setQuizStarted] = useState(false);
   const [quizComplete, setQuizComplete] = useState(false);
-  const [totalAttempts, setTotalAttempts] = useState(0);
   const [cardAccuracyUpdates, setCardAccuracyUpdates] = useState({});
 
   // Filter cards based on practiceStarredOnly prop
@@ -68,13 +67,11 @@ export default function MiniQuizMode({
     const answerLower = answer.toLowerCase().trim();
     const correctAnswerLower = correctAnswer.toLowerCase().trim();
     const secondaryAnswerLower = secondaryAnswer ? secondaryAnswer.toLowerCase().trim() : '';
-    
-    setTotalAttempts(prev => prev + 1);
-    
+        
     if (answerLower === correctAnswerLower || (secondaryAnswerLower && answerLower === secondaryAnswerLower)) {
       new Audio(correctSound).play();
       setStatus('correct');
-      const updatedTerm = updateAccuracy(true);
+      updateAccuracy(true);
       setTimeout(() => {
         setAnswer('');
         setRemainingCards(prev => prev.filter(card => card.id !== currentTerm.id));
@@ -84,7 +81,7 @@ export default function MiniQuizMode({
       // incorrect
       new Audio(incorrectSound).play();
       setStatus('incorrect');
-      const updatedTerm = updateAccuracy(false);
+      updateAccuracy(false);
       setTimeout(() => {
         alert(`Incorrect! The correct answer was: ${correctAnswer}`);
       }, 300);
@@ -103,7 +100,6 @@ export default function MiniQuizMode({
     setCurrentTerm(null);
     setAnswer('');
     setStatus(null);
-    setTotalAttempts(0);
     // Don't reset cardAccuracyUpdates - keep previous quiz accuracy intact
   };
 
