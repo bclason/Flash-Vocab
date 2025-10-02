@@ -11,7 +11,7 @@ export default function MiniQuiz() {
   const listId = state?.listId;
   const listName = state?.listName;
 
-  const { filteredCards, practiceStarredOnly, togglePracticeStarred, starredCount, totalCount } = useStarredFilter(cards);
+  const { practiceStarredOnly, togglePracticeStarred, starredCount, totalCount } = useStarredFilter(cards);
 
   // Fetch all cards when the component mounts
   useEffect(() => {

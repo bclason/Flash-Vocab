@@ -11,7 +11,7 @@ export default function Quiz() {
   const listId = state?.listId;
   const listName = state?.listName;
 
-  const { filteredCards, practiceStarredOnly, togglePracticeStarred, starredCount, totalCount } = useStarredFilter(cards);
+  const { practiceStarredOnly, togglePracticeStarred, starredCount, totalCount } = useStarredFilter(cards);
 
   // Fetch all cards from your backend
   useEffect(() => {

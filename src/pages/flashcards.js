@@ -14,7 +14,7 @@ export default function Flashcards() {
   const listName = state?.listName;
 
   // Use the custom hook for starred filtering
-  const { filteredCards, practiceStarredOnly, togglePracticeStarred, starredCount, totalCount } = useStarredFilter(cards);
+  const { practiceStarredOnly, togglePracticeStarred, starredCount, totalCount } = useStarredFilter(cards);
 
 
   useEffect(() => {
