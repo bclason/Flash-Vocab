@@ -1,21 +1,10 @@
-import { useNavigate, useLocation } from 'react-router-dom';
-import { useState, useEffect } from 'react';
-
-// check accuracy
+import { useState } from 'react';
 
 export default function Quiz({
     cards,
     practiceStarredOnly = false,
     onComplete = null,
-    medley,
 }) {
-  const navigate = useNavigate();
-//   const [cards, setCards] = useState([]);
-
-  const { state } = useLocation();
-  const listId = state?.listId;
-  const listName = state?.listName;
-
   const [answers, setAnswers] = useState({}); // array of typed answers
   const [quizComplete, setQuizComplete] = useState(false);
   const [score, setScore] = useState(0);
@@ -28,15 +17,6 @@ export default function Quiz({
     ? cards.filter(card => card.starred === 1 || card.starred === true)
     : cards;
 
-
-  // Fetch all cards from your backend (good)
-//   useEffect(() => {
-//     fetch(`lists/${listId}/cards`)
-//       .then(res => res.json())
-//       .then(data => setCards(data))   // Save fetched data into state
-//       .catch(err => console.error('Failed to fetch cards', err));
-//   }, [listId]);
-
   const updateAccuracy = (wrong) => {
     for (const card of filteredCards) {
       let new_correct = card.correct_attempts;
@@ -45,7 +25,6 @@ export default function Quiz({
         new_correct = card.correct_attempts + 1;
       }
       new_total = card.total_attempts + 1;
-      // console.log(`Card ID: ${card.id}, Correct: ${new_correct}, Total: ${new_total}`);
 
       fetch(`/cards/${card.id}`, {
         method: 'PUT',
@@ -73,10 +52,10 @@ export default function Quiz({
             key={card.id}
             style={{
               display: 'flex',
-              alignItems: 'center',     // vertical center of row
+              alignItems: 'center',   
               justifyContent: 'flex-start',
-              gap: '1rem',              // space between word and input
-              width: '60%',             // row width (centered by parent)
+              gap: '1rem',          
+              width: '60%',            
               padding: '0.5rem 0',
             }}>
             <div 

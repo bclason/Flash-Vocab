@@ -76,7 +76,6 @@ export default function MultipleChoiceMode({
         // Remove the current card from remaining cards (got it right)
         const newRemainingCards = remainingCards.filter((_, index) => index !== currentCardIndex);
         setRemainingCards(newRemainingCards);
-        
         // Check if quiz is complete
         if (newRemainingCards.length === 0) {
           setQuizComplete(true);
@@ -99,12 +98,12 @@ export default function MultipleChoiceMode({
           setCurrentCardIndex(0); // Loop back to start
         }
       }
-      
       // Reset the result display state for the next question
       setShowResult(false);
       setSelectedAnswer(null);
     }, 1000);
   };
+
 
   const handleRestart = () => {
     setRemainingCards([...cards]);
@@ -116,12 +115,10 @@ export default function MultipleChoiceMode({
     setSelectedAnswer(null);
   };
 
+
   const updateAccuracy = (card, correct) => {
     const new_correct = correct ? card.correct_attempts + 1 : card.correct_attempts;
-    const new_total = card.total_attempts + 1;
-    
-    console.log(`MCQ - Card ${card.id}: correct=${correct}, new_correct=${new_correct}, new_total=${new_total}`);
-    
+    const new_total = card.total_attempts + 1;    
     // Update the database
     fetch(`/cards/${card.id}`, {
       method: 'PUT',
@@ -132,7 +129,6 @@ export default function MultipleChoiceMode({
       if (!response.ok) {
         throw new Error('Failed to update accuracy');
       }
-      console.log(`MCQ - Database updated for card ${card.id}: ${new_correct}/${new_total}`);
     })
     .catch(error => console.error('Error updating accuracy:', error));
   };
@@ -216,13 +212,6 @@ export default function MultipleChoiceMode({
         </div>
       </div>
     );
-  } else if (quizComplete && onComplete) {
-    // In medley mode, show completion message briefly before auto-advance
-    // return (
-    //   <div style={{ textAlign: 'center', padding: '2rem', fontSize: '1.5rem' }}>
-    //     Multiple Choice Complete! Moving to next mode...
-    //   </div>
-    // );
   }
 
   if (!currentCard) {

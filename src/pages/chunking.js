@@ -23,7 +23,6 @@ export default function Chunking() {
     fetch(`lists/${listId}/cards`)
       .then(res => res.json())
       .then(data => {
-        // console.log('Fetched cards:', data);
         if (data && Array.isArray(data)) {
           setCards(data);
           // Create groups based on number of cards (aim for 4-5 cards per group)
@@ -32,7 +31,6 @@ export default function Chunking() {
           const numGroups = Math.ceil(numCards / cardsPerGroup);
           const groupIds = Array.from({ length: numGroups }, (_, i) => i + 1); // 1, 2, 3, 4, etc.
           setContainers(groupIds);
-          
           // Initialize card positions based on existing chunk_id from database
           const initialPositions = {};
           data.forEach(card => {
@@ -57,7 +55,6 @@ export default function Chunking() {
       console.log('chunk_id on drop:', over.id);
       // Determine the chunk_id to save (0 for unassigned, over.id for groups)
       const chunkId = over.id === 'unassigned' ? 0 : over.id;
-      
       // Check if the target container already has 5 cards (if it's not the unassigned area)
       if (over.id !== 'unassigned') {
         const cardsInTarget = Object.values(cardPositions).filter(pos => pos === over.id).length;
@@ -66,7 +63,6 @@ export default function Chunking() {
           return; // Don't allow the drop
         }
       }
-      
       // Always update the database with the new chunk_id
       try {
         const response = await fetch(`/cards/${active.id}`, {
@@ -82,7 +78,6 @@ export default function Chunking() {
         console.error('Error updating card chunk:', error);
         return;
       }
-      
       // Update the position of the dragged card
       setCardPositions(prev => ({
         ...prev,
@@ -95,46 +90,37 @@ export default function Chunking() {
     try {
       // Extract words based on what's currently displayed (term or translation)
       const words = cards.map(card => swapped ? card.translation : card.term);
-      
       if (words.length === 0) {
         alert('No cards to sort!');
         return;
       }
-
       // Send words to backend for AI grouping
       const response = await fetch('http://localhost:5000/group-words', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ words: words }),
       });
-
       if (!response.ok) {
         console.error('Failed to get AI grouping');
         alert('Failed to get AI grouping. Please try again.');
         return;
       }
-
       const aiResponse = await response.json();
       console.log('AI grouping response:', aiResponse);
-
       // Parse the AI response and create new card positions
       const newCardPositions = {};
       const groups = aiResponse.groups || [];
-      
       // Update containers to match the number of AI-generated groups
       const numAIGroups = groups.length;
       const newContainers = Array.from({ length: numAIGroups }, (_, i) => i + 1);
       setContainers(newContainers);
-      
       // First, set all cards to unassigned (0)
       cards.forEach(card => {
         newCardPositions[card.id] = 0;
       });
-
       // Then assign cards to groups based on AI suggestions
       groups.forEach((group, groupIndex) => {
         const groupId = groupIndex + 1; // Groups are numbered 1, 2, 3, etc.
-        
         group.forEach(wordFromAI => {
           // Find the card that matches this word (based on what was sent to AI)
           const matchingCard = cards.find(card => 

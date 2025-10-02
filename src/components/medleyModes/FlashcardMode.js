@@ -4,12 +4,8 @@ import "react-quizlet-flashcard/dist/index.css";
 
 export default function FlashcardMode({ 
   cards, 
-  listName, 
   practiceStarredOnly = false, 
-  onToggleStarred = null, 
   starredCount = 0, 
-  totalCount = 0,
-  onComplete = null
 }) {
   const [isReversed, setIsReversed] = useState(false);
 

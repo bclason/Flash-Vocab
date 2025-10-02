@@ -119,16 +119,13 @@ export default function Edit() {
     setCards(prev =>
       prev.map(c => c.id === cardId ? { ...c, [field]: value } : c)
     )
-    //console.log("Cards state:", cards.map(c => ({ id: c.id, ...c })));
     const response = await fetch(`/cards/${cardId}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ field, value })
     });
-    //console.log("Updating card:", { cardId, field, value });
     if (response.ok) {
       setCards(prev => prev.map(c => c.id === cardId ? { ...c, [field]: value } : c));
-      //console.log('Card updated successfully');
     } else {
       console.error('Failed to update card');
     }
@@ -136,14 +133,12 @@ export default function Edit() {
 
 
   const handleDeleteCard = async (cardId) => {
-    //if (window.confirm('Are you sure you want to delete this card?')) {
       try {
         const response = await fetch(`/cards/${cardId}`, {
           method: 'DELETE',
         });
         if (response.ok) {
           setCards(cards.filter(card => card.id !== cardId));
-          //console.log('Card deleted successfully');
         } else {
           const errorData = await response.json();
           console.error('Failed to delete card:', errorData);
@@ -278,7 +273,7 @@ export default function Edit() {
             card={card}
             onFieldChange={updateCard}
             accuracy={(card.correct_attempts / (card.total_attempts || 1)) * 100} // Calculate accuracy as raw percentage number
-            onDelete={() => handleDeleteCard(card.id)}  // ← Use card.id from the map
+            onDelete={() => handleDeleteCard(card.id)}
           />
         ))}
       </div>

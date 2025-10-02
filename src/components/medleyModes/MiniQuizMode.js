@@ -126,7 +126,6 @@ export default function MiniQuizMode({
       if (!response.ok) {
         throw new Error('Failed to update accuracy');
       }
-      // console.log(`MINI - Database updated successfully`);
     })
     .catch(error => console.error('Error updating accuracy:', error));
 

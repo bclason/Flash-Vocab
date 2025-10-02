@@ -5,10 +5,8 @@ import MiniQuizMode from '../components/medleyModes/MiniQuizMode';
 import FullQuizMode from '../components/medleyModes/FullQuizMode';
 import MultipleChoiceMode from '../components/medleyModes/MultipleChoiceMode';
 
-// check if accuracy is being updated properly in medley mode
-// flash quiz in both doesnt update accuracy
-// quiz does in both
-// after quiz, make button for restart chunk
+
+
 
 export default function Medley() {
   const navigate = useNavigate();
