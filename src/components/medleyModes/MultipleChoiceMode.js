@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 export default function MultipleChoiceMode({ 
   cards, 
@@ -16,7 +16,7 @@ export default function MultipleChoiceMode({
   const currentCard = remainingCards[currentCardIndex];
 
   // Generate 4 multiple choice options
-  const generateChoices = (correctCard, allCards) => {
+  const generateChoices = useCallback((correctCard, allCards) => {
     if (!correctCard || allCards.length < 4) return [];
 
     const correctAnswer = isReversed ? correctCard.term : correctCard.translation;
@@ -31,7 +31,7 @@ export default function MultipleChoiceMode({
     // Combine correct and incorrect answers, then shuffle
     const allChoices = [correctAnswer, ...incorrectAnswers];
     return allChoices.sort(() => Math.random() - 0.5);
-  };
+  }, [isReversed]);
 
   // Reset remaining cards when cards prop changes
   useEffect(() => {
@@ -40,15 +40,21 @@ export default function MultipleChoiceMode({
     setQuizComplete(false);
   }, [cards]);
 
-  // Generate choices when card changes
+  // Generate choices when current card changes
   useEffect(() => {
     if (currentCard && cards.length >= 4) {
       const newChoices = generateChoices(currentCard, cards);
       setChoices(newChoices);
+    }
+  }, [currentCard, cards, generateChoices]);
+
+  // Reset UI state when card changes
+  useEffect(() => {
+    if (currentCard) {
       setSelectedAnswer(null);
       setShowResult(false);
     }
-  }, [currentCardIndex, remainingCards, isReversed, cards]);
+  }, [currentCard]);
 
   const handleAnswerClick = (choice) => {
     if (showResult) return; // Prevent clicking after answer is shown
@@ -84,11 +90,14 @@ export default function MultipleChoiceMode({
         }
       } else {
         // Move to next card (wrong answer stays in the pool)
-        if (currentCardIndex < remainingCards.length - 1) {
-          setCurrentCardIndex(prev => prev + 1);
-        } else {
-          setCurrentCardIndex(0); // Loop back to start
+        if (remainingCards.length > 1) {
+          if (currentCardIndex < remainingCards.length - 1) {
+            setCurrentCardIndex(prev => prev + 1);
+          } else {
+            setCurrentCardIndex(0); // Loop back to start
+          }
         }
+        // If only 1 card left, stay on the same card (don't change index)
       }
       // Reset the result display state for the next question
       setShowResult(false);
