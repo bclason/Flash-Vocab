@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import correctSound from '../correct.mp3';
 import incorrectSound from '../incorrect.mp3';
 
@@ -17,45 +17,49 @@ export default function MiniQuizMode({
   const [quizStarted, setQuizStarted] = useState(false);
   const [quizComplete, setQuizComplete] = useState(false);
   const [cardAccuracyUpdates, setCardAccuracyUpdates] = useState({});
+  const inputRef = useRef(null);
 
   // Filter cards based on practiceStarredOnly prop
-  const filteredCards = practiceStarredOnly 
-    ? cards.filter(card => card.starred === 1 || card.starred === true)
-    : cards;
+  const filteredCards = useMemo(() => {
+    return practiceStarredOnly 
+      ? cards.filter(card => card.starred === 1 || card.starred === true)
+      : cards;
+  }, [cards, practiceStarredOnly]);
 
   // Initialize remaining cards when cards or filtering changes
   useEffect(() => {
-    if (filteredCards.length > 0) {
-      setRemainingCards([...filteredCards]);
-      setCurrentTerm(null); // Clear current term so a new one gets selected
-      setQuizStarted(true); // Mark that quiz has started
-    }
-  }, [cards, practiceStarredOnly]);
+    setRemainingCards([...filteredCards]);
+    setCurrentTerm(null); // Clear current term so a new one gets selected
+    setQuizStarted(true); // Mark that quiz has started
+  }, [cards, practiceStarredOnly, filteredCards]);
 
 
-  useEffect(() => {
-    if (remainingCards.length > 0 && filteredCards.length > 0) {
-      getRandomTerm();
-    } else if (remainingCards.length === 0 && filteredCards.length > 0 && quizStarted && !quizComplete) {
-      // Quiz completed - set completion state
-      console.log('Mini quiz completed');
-      setQuizComplete(true);
-    }
-  }, [remainingCards]);
-
-
-  const getRandomTerm = () => {
+  const getRandomTerm = useCallback(() => {
     if (remainingCards.length === 0) return;
     const randomIndex = Math.floor(Math.random() * remainingCards.length);
     const selectedCard = remainingCards[randomIndex];
-    
     // Apply any accuracy updates we've tracked for this card
     const updatedCard = cardAccuracyUpdates[selectedCard.id] 
       ? { ...selectedCard, ...cardAccuracyUpdates[selectedCard.id] }
       : selectedCard;
       
     setCurrentTerm(updatedCard);
-  }
+  }, [remainingCards, cardAccuracyUpdates]);
+  
+
+  // get new term
+  useEffect(() => {
+    if (remainingCards.length > 0 && !currentTerm) {
+      getRandomTerm();
+    }
+  }, [remainingCards, getRandomTerm, currentTerm]);
+
+  // Focus input when a new term appears
+  useEffect(() => {
+    if (currentTerm && inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, [currentTerm]);
 
 
   const handleSubmit = (e) => {
@@ -74,7 +78,17 @@ export default function MiniQuizMode({
       updateAccuracy(true);
       setTimeout(() => {
         setAnswer('');
-        setRemainingCards(prev => prev.filter(card => card.id !== currentTerm.id));
+        const newRemainingCards = remainingCards.filter(card => card.id !== currentTerm.id);
+        setRemainingCards(newRemainingCards);
+        
+        // Check if quiz is complete after removing this card
+        if (newRemainingCards.length === 0 && quizStarted && !quizComplete) {
+          setQuizComplete(true);
+        } else {
+          // Clear current term so useEffect will pick a new one
+          setCurrentTerm(null);
+        }
+        
         setStatus(null);
       }, 300);
     } else {
@@ -213,13 +227,16 @@ export default function MiniQuizMode({
             color: status === 'correct' ? 'green' : status === 'incorrect' ? 'red' : 'black',
           }}>{isReversed ? currentTerm.translation : currentTerm.term}</h2>
           <form onSubmit={handleSubmit}>
-            <input style={{
-              fontSize: '2rem'
-            }}
+            <input 
+              ref={inputRef}
+              style={{
+                fontSize: '2rem'
+              }}
               type="text"
               value={answer}
               onChange={(e) => setAnswer(e.target.value)}
               placeholder="Type your answer"
+              autoFocus
             />
           </form>
         </div>
