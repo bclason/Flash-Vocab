@@ -11,7 +11,24 @@ import os
 load_dotenv()
 
 app = Flask(__name__)
-CORS(app)
+
+# Configure CORS for production
+frontend_url = os.getenv('FRONTEND_URL', 'https://flash-vocab.vercel.app')
+allowed_origins = [
+    "http://localhost:3000",  # Development
+    frontend_url,  # Production
+    "https://*.vercel.app"  # Allow all Vercel preview deployments
+]
+
+# In development, allow all origins
+if os.getenv('FLASK_ENV') == 'development':
+    CORS(app)
+else:
+    CORS(app, 
+         origins=allowed_origins,
+         allow_headers=["Content-Type", "Authorization"],
+         methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"])
+
 client = OpenAI()  # Will automatically use OPENAI_API_KEY from environment
 
 init_db()

@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom'; 
 import { useEffect, useState } from 'react';
 import ListItem from '../components/list_item';
+import config from '../config';
 
 
 
@@ -11,7 +12,7 @@ export default function Dashboard() {
 
   useEffect(() => {
     // Fetch all lists from your backend
-    fetch('/lists')
+    fetch(`${config.API_BASE_URL}/lists`)
       .then(res => res.json())
       .then(data => setLists(data))   // Save fetched data into state
       .catch(err => console.error('Failed to fetch lists', err));
@@ -21,7 +22,7 @@ export default function Dashboard() {
   // create new list
   const handleNew = async () => {
     try {
-      const response = await fetch('/lists', {
+      const response = await fetch(`${config.API_BASE_URL}/lists`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({})
@@ -47,7 +48,7 @@ export default function Dashboard() {
 
   const handleDel = (id) => {
     if (window.confirm('Are you sure you want to delete this list?')) {
-      fetch(`/lists/${id}`, {
+      fetch(`${config.API_BASE_URL}/lists/${id}`, {
         method: 'DELETE',
       })
         .then(response => {
@@ -64,7 +65,7 @@ export default function Dashboard() {
 
 
   const handleEdit = (id) => {
-    fetch(`/lists/${id}`)
+    fetch(`${config.API_BASE_URL}/lists/${id}`)
       .then(res => {
         if (!res.ok) throw new Error(`Failed to fetch list: ${res.status}`);
         return res.json();
@@ -78,7 +79,7 @@ export default function Dashboard() {
 
 
   const handleStats = (id) => {
-     fetch(`/lists/${id}`)
+     fetch(`${config.API_BASE_URL}/lists/${id}`)
       .then(res => {
         if (!res.ok) throw new Error(`Failed to fetch list: ${res.status}`);
         return res.json();

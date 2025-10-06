@@ -1,4 +1,4 @@
-# Flash Vocab - AI-Powered Vocabulary Learning App
+# Flash Vocab - Vocabulary Learning App
 
 A comprehensive vocabulary memorization app with AI-powered grouping, multiple learning modes, and progress tracking.
 

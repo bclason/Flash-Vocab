@@ -2,6 +2,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import NewCard from '../components/new_card';
 import Dropdown2 from '../components/dropdown2';
+import config from '../config';
 
 
 
@@ -19,7 +20,7 @@ export default function Edit() {
 
   useEffect(() => {
     // Fetch all cards from your backend
-    fetch(`lists/${listId}/cards`)
+    fetch(`${config.API_BASE_URL}/lists/${listId}/cards`)
       .then(res => res.json())
       .then(data => {
         setCards(data);
@@ -78,7 +79,7 @@ export default function Edit() {
   // update list name
   const handleSubmit = async (event) => {
     event.preventDefault();
-    const response = await fetch(`/lists/${listId}`, {
+    const response = await fetch(`${config.API_BASE_URL}/lists/${listId}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({name: textEntry}),
@@ -93,7 +94,7 @@ export default function Edit() {
 
   const newCard = async () => {
     try {
-      const response = await fetch('/cards', {
+      const response = await fetch(`${config.API_BASE_URL}/cards`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ list_id: listId }),
@@ -119,7 +120,7 @@ export default function Edit() {
     setCards(prev =>
       prev.map(c => c.id === cardId ? { ...c, [field]: value } : c)
     )
-    const response = await fetch(`/cards/${cardId}`, {
+    const response = await fetch(`${config.API_BASE_URL}/cards/${cardId}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ field, value })
@@ -134,7 +135,7 @@ export default function Edit() {
 
   const handleDeleteCard = async (cardId) => {
       try {
-        const response = await fetch(`/cards/${cardId}`, {
+        const response = await fetch(`${config.API_BASE_URL}/cards/${cardId}`, {
           method: 'DELETE',
         });
         if (response.ok) {
@@ -153,7 +154,7 @@ export default function Edit() {
 
   const resetAccuracy = async () => {
     try {
-      const response = await fetch(`/lists/${listId}/reset-accuracy`, {
+      const response = await fetch(`${config.API_BASE_URL}/lists/${listId}/reset-accuracy`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
       });

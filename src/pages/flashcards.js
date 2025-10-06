@@ -2,6 +2,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { useStarredFilter } from '../hooks/useStarredFilter';
 import FlashcardMode from '../components/medleyModes/FlashcardMode';
+import config from '../config';
 
 
 
@@ -20,7 +21,7 @@ export default function Flashcards() {
   useEffect(() => {
     if (!listId) return;
     // Fetch all cards from your backend
-    fetch(`lists/${listId}/cards`)
+    fetch(`${config.API_BASE_URL}/lists/${listId}/cards`)
       .then(res => {
         if (!res.ok) {
           throw new Error(`HTTP error! status: ${res.status}`);

@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { DndContext } from '@dnd-kit/core';
 import Droppable from '../hooks/droppable';
 import Draggable from '../hooks/draggable';
+import config from '../config';
 
 
 
@@ -20,7 +21,7 @@ export default function Chunking() {
   // Fetch cards from the backend
   useEffect(() => {
     if (!listId) return;
-    fetch(`lists/${listId}/cards`)
+    fetch(`${config.API_BASE_URL}/lists/${listId}/cards`)
       .then(res => res.json())
       .then(data => {
         if (data && Array.isArray(data)) {
@@ -65,7 +66,7 @@ export default function Chunking() {
       }
       // Always update the database with the new chunk_id
       try {
-        const response = await fetch(`/cards/${active.id}`, {
+        const response = await fetch(`${config.API_BASE_URL}/cards/${active.id}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ chunk_id: chunkId }),
@@ -95,7 +96,7 @@ export default function Chunking() {
         return;
       }
       // Send words to backend for AI grouping
-      const response = await fetch('http://localhost:5000/group-words', {
+      const response = await fetch(`${config.API_BASE_URL}/group-words`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ words: words }),
@@ -136,7 +137,7 @@ export default function Chunking() {
       const updatePromises = cards.map(async (card) => {
         const newChunkId = newCardPositions[card.id];
         try {
-          const response = await fetch(`/cards/${card.id}`, {
+          const response = await fetch(`${config.API_BASE_URL}/cards/${card.id}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ chunk_id: newChunkId }),

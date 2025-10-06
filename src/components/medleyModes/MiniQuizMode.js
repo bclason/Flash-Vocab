@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import correctSound from '../correct.mp3';
 import incorrectSound from '../incorrect.mp3';
+import config from '../../config';
 
 // when starred messed up, switching terms with each input
 
@@ -127,7 +128,7 @@ export default function MiniQuizMode({
     const new_total = old_total + 1;
 
     // Update the database
-    fetch(`/cards/${currentTerm.id}`, {
+    fetch(`${config.API_BASE_URL}/cards/${currentTerm.id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ correct_attempts: new_correct, total_attempts: new_total }),

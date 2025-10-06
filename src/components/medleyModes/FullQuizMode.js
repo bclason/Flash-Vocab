@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import config from '../../config';
 
 export default function Quiz({
     cards,
@@ -26,7 +27,7 @@ export default function Quiz({
       }
       new_total = card.total_attempts + 1;
 
-      fetch(`/cards/${card.id}`, {
+      fetch(`${config.API_BASE_URL}/cards/${card.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ correct_attempts: new_correct, total_attempts: new_total }),

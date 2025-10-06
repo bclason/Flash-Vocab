@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import config from '../../config';
 
 export default function MultipleChoiceMode({ 
   cards, 
@@ -135,7 +136,7 @@ export default function MultipleChoiceMode({
     console.log(`MCQ - Card ${card.id}: correct=${correct}, new_correct=${new_correct}, new_total=${new_total}`);
     
     // Update the database
-    fetch(`/cards/${card.id}`, {
+    fetch(`${config.API_BASE_URL}/cards/${card.id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ correct_attempts: new_correct, total_attempts: new_total }),

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import config from '../config';
 
 
 export default function CustomDropdown({ listId, listName }) {
@@ -7,7 +8,7 @@ export default function CustomDropdown({ listId, listName }) {
   const navigate = useNavigate();
 
   const updateUsedStats = () => {
-    fetch(`/lists/${listId}`, {
+    fetch(`${config.API_BASE_URL}/lists/${listId}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ id: listId, name: listName, last_used: new Date().toISOString().slice(0, 19).replace('T', ' ') })

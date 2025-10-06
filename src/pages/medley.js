@@ -4,6 +4,7 @@ import FlashcardMode from '../components/medleyModes/FlashcardMode';
 import MiniQuizMode from '../components/medleyModes/MiniQuizMode';
 import FullQuizMode from '../components/medleyModes/FullQuizMode';
 import MultipleChoiceMode from '../components/medleyModes/MultipleChoiceMode';
+import config from '../config';
 
 
 
@@ -28,7 +29,7 @@ export default function Medley() {
   // Fetch all cards and determine available chunks
   useEffect(() => {
     if (!listId) return;
-    fetch(`lists/${listId}/cards`)
+    fetch(`${config.API_BASE_URL}/lists/${listId}/cards`)
       .then(res => res.json())
       .then(data => {
         console.log('Fetched all cards:', data);

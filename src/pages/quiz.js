@@ -2,6 +2,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { useStarredFilter } from '../hooks/useStarredFilter';
 import FullQuizMode from '../components/medleyModes/FullQuizMode';
+import config from '../config';
 
 export default function Quiz() {
   const navigate = useNavigate();
@@ -16,7 +17,7 @@ export default function Quiz() {
   // Fetch all cards from your backend
   useEffect(() => {
     if (!listId) return;
-    fetch(`lists/${listId}/cards`)
+    fetch(`${config.API_BASE_URL}/lists/${listId}/cards`)
       .then(res => {
         if (!res.ok) {
           throw new Error(`HTTP error! status: ${res.status}`);
