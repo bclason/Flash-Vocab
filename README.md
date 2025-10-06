@@ -102,5 +102,5 @@ MIT License - Feel free to use this project as inspiration for your own vocabula
 
 Built by **Ben Clason** as a portfolio project demonstrating full-stack development with AI integration.
 
-- **LinkedIn**: [Your LinkedIn](https://www.linkedin.com/in/benjamin-clason/)
-- **GitHub**: [bclason](https://github.com/bclason) 
+- **LinkedIn**: [www.linkedin.com/in/benjamin-clason/](https://www.linkedin.com/in/benjamin-clason/)
+- **GitHub**: [github.com/bclason](https://github.com/bclason) 
