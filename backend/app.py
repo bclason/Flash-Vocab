@@ -13,21 +13,36 @@ load_dotenv()
 app = Flask(__name__)
 
 # Configure CORS for production
-frontend_url = os.getenv('FRONTEND_URL', 'https://flash-vocab.vercel.app')
+frontend_url = os.getenv('FRONTEND_URL', 'https://flash-vocab-delta.vercel.app')
 allowed_origins = [
     "http://localhost:3000",  # Development
-    frontend_url,  # Production
-    "https://*.vercel.app"  # Allow all Vercel preview deployments
+    "https://flash-vocab-delta.vercel.app",  # Your specific Vercel URL
+    frontend_url,  # Production (from env var)
 ]
 
-# In development, allow all origins
-if os.getenv('FLASK_ENV') == 'development':
-    CORS(app)
-else:
-    CORS(app, 
-         origins=allowed_origins,
-         allow_headers=["Content-Type", "Authorization"],
-         methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"])
+print(f"CORS Configuration:")
+print(f"FLASK_ENV: {os.getenv('FLASK_ENV')}")
+print(f"FRONTEND_URL: {frontend_url}")
+print(f"Allowed Origins: {allowed_origins}")
+
+# Temporarily allow all origins for debugging
+CORS(app, 
+     allow_headers=["Content-Type", "Authorization"],
+     methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+     supports_credentials=False)
+print("CORS: Allowing all origins for debugging")
+
+# Uncomment below for production with restricted origins:
+# if os.getenv('FLASK_ENV') == 'development':
+#     CORS(app)
+#     print("CORS: Development mode - allowing all origins")
+# else:
+#     CORS(app, 
+#          origins=allowed_origins,
+#          allow_headers=["Content-Type", "Authorization"],
+#          methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+#          supports_credentials=False)
+#     print("CORS: Production mode - restricted origins")
 
 client = OpenAI()  # Will automatically use OPENAI_API_KEY from environment
 
@@ -41,6 +56,15 @@ def get_db_connection():
     conn.row_factory = sqlite3.Row
     return conn
 
+
+# Test endpoint to verify CORS
+@app.route('/test', methods=['GET'])
+def test_cors():
+    return jsonify({
+        'message': 'CORS is working!',
+        'frontend_url': os.getenv('FRONTEND_URL'),
+        'flask_env': os.getenv('FLASK_ENV')
+    })
 
 # get all lists
 @app.route('/lists', methods=['GET'])
