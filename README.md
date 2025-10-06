@@ -15,7 +15,7 @@ A comprehensive vocabulary memorization app with AI-powered grouping, multiple l
 
 ## 🚀 Live Demo
 
-[View Live App](https://flash-vocab.vercel.app) *(Update with your actual URL)*
+[View Live App](https://flash-vocab-delta.vercel.app)
 
 ## 🛠️ Tech Stack
 
@@ -83,13 +83,16 @@ Ready to deploy? Follow these steps:
 1. Connect GitHub repo to Vercel
 2. Set build command: `npm run build`
 3. Set output directory: `build`
-4. Deploy!
+4. Add environment variable: `REACT_APP_API_BASE_URL=https://flash-vocab.up.railway.app`
+5. Deploy!
 
-### Backend (Railway/Render)
-1. Add production dependencies to requirements.txt
-2. Create production database (PostgreSQL)  
-3. Set environment variables (OPENAI_API_KEY, DATABASE_URL)
-4. Deploy Flask app
+### Backend (Railway)
+1. Connect GitHub repo to Railway
+2. Set environment variables:
+   - `OPENAI_API_KEY=your_openai_api_key`
+   - `FRONTEND_URL=https://flash-vocab-delta.vercel.app`
+   - `FLASK_ENV=production`
+3. Deploy Flask app
 
 ## 📄 License
 
@@ -97,8 +100,7 @@ MIT License - Feel free to use this project as inspiration for your own vocabula
 
 ## 🤝 About the Developer
 
-Built by **Blake Clason** as a portfolio project demonstrating full-stack development with AI integration.
+Built by **Ben Clason** as a portfolio project demonstrating full-stack development with AI integration.
 
-- **LinkedIn**: [Your LinkedIn](https://linkedin.com/in/yourprofile)
-- **Portfolio**: [Your Portfolio](https://yourportfolio.com)
+- **LinkedIn**: [Your LinkedIn](https://www.linkedin.com/in/benjamin-clason/)
 - **GitHub**: [bclason](https://github.com/bclason) 
