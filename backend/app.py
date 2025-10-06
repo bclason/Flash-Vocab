@@ -12,25 +12,19 @@ load_dotenv()
 
 app = Flask(__name__)
 
-# Configure CORS for production
-frontend_url = os.getenv('FRONTEND_URL', 'https://flash-vocab-delta.vercel.app')
-allowed_origins = [
-    "http://localhost:3000",  # Development
-    "https://flash-vocab-delta.vercel.app",  # Your specific Vercel URL
-    frontend_url,  # Production (from env var)
-]
-
-print(f"CORS Configuration:")
-print(f"FLASK_ENV: {os.getenv('FLASK_ENV')}")
-print(f"FRONTEND_URL: {frontend_url}")
-print(f"Allowed Origins: {allowed_origins}")
-
-# Temporarily allow all origins for debugging
+# Configure CORS - Allow all origins for now
 CORS(app, 
-     allow_headers=["Content-Type", "Authorization"],
-     methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-     supports_credentials=False)
-print("CORS: Allowing all origins for debugging")
+     origins="*",
+     allow_headers=["Content-Type", "Authorization", "Access-Control-Allow-Origin"],
+     methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"])
+
+# Debug info
+print("="*50)
+print("FLASK APP STARTING")
+print(f"FLASK_ENV: {os.getenv('FLASK_ENV', 'NOT SET')}")
+print(f"FRONTEND_URL: {os.getenv('FRONTEND_URL', 'NOT SET')}")
+print("CORS: Allowing ALL origins")
+print("="*50)
 
 # Uncomment below for production with restricted origins:
 # if os.getenv('FLASK_ENV') == 'development':
@@ -57,13 +51,23 @@ def get_db_connection():
     return conn
 
 
+# Add CORS headers to all responses
+@app.after_request
+def after_request(response):
+    response.headers.add('Access-Control-Allow-Origin', '*')
+    response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
+    response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
+    return response
+
 # Test endpoint to verify CORS
 @app.route('/test', methods=['GET'])
 def test_cors():
     return jsonify({
-        'message': 'CORS is working!',
-        'frontend_url': os.getenv('FRONTEND_URL'),
-        'flask_env': os.getenv('FLASK_ENV')
+        'message': 'Backend is working!',
+        'cors_status': 'Allowing all origins',
+        'frontend_url': os.getenv('FRONTEND_URL', 'NOT SET'),
+        'flask_env': os.getenv('FLASK_ENV', 'NOT SET'),
+        'all_env_vars': list(os.environ.keys())
     })
 
 # get all lists
