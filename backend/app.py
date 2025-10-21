@@ -7,16 +7,14 @@ import datetime
 from dotenv import load_dotenv
 import os
 
-# Load environment variables from .env file
+# Load environment variables
 load_dotenv()
 
 app = Flask(__name__)
 
-# Configure CORS - Allow all origins for now
-CORS(app, 
-     origins="https://flash-vocab-delta.vercel.app",
-     allow_headers=["Content-Type", "Authorization", "Access-Control-Allow-Origin"],
-     methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"])
+# Allow requests from your Vercel frontend
+CORS(app, origins=["https://flash-vocab-delta.vercel.app"], methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"])
+
 
 # Debug info
 print("="*50)
