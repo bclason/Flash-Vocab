@@ -14,7 +14,7 @@ app = Flask(__name__)
 
 # Configure CORS - Allow all origins for now
 CORS(app, 
-     origins="*",
+     origins="https://flash-vocab-delta.vercel.app",
      allow_headers=["Content-Type", "Authorization", "Access-Control-Allow-Origin"],
      methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"])
 
