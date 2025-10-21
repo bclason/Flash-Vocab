@@ -13,7 +13,7 @@ load_dotenv()
 app = Flask(__name__)
 
 # Allow requests from your Vercel frontend
-CORS(app, origins=["https://flash-vocab-delta.vercel.app"], methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"])
+CORS(app, origins=["https://flash-vocab-ben-clasons-projects.vercel.app"], methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"])
 
 
 # Debug info
