@@ -8,24 +8,32 @@ from dotenv import load_dotenv
 import os
 
 # Load environment variables
-load_dotenv()
+try:
+    load_dotenv()
+    print("✅ Environment variables loaded successfully")
+except Exception as e:
+    print(f"❌ Error loading environment variables: {e}")
 
 app = Flask(__name__)
+print("✅ Flask app created")
 
-# Allow requests from your Vercel frontend
-CORS(app, origins=[
-    "https://flash-vocab-ben-clasons-projects.vercel.app",  # New Vercel URL
-    "https://flash-vocab-delta.vercel.app",  # Old Vercel URL (backup)
-    "http://localhost:3000"  # Development
-], methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"])
-
+# Configure CORS
+try:
+    CORS(app, origins=[
+        "https://flash-vocab-ben-clasons-projects.vercel.app",  # New Vercel URL
+        "https://flash-vocab-delta.vercel.app",  # Old Vercel URL (backup)  
+        "http://localhost:3000"  # Development
+    ], methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"])
+    print("✅ CORS configured successfully")
+except Exception as e:
+    print(f"❌ Error configuring CORS: {e}")
 
 # Debug info
 print("="*50)
 print("FLASK APP STARTING")
 print(f"FLASK_ENV: {os.getenv('FLASK_ENV', 'NOT SET')}")
 print(f"FRONTEND_URL: {os.getenv('FRONTEND_URL', 'NOT SET')}")
-print("CORS: Allowing ALL origins")
+print(f"OPENAI_API_KEY: {'SET' if os.getenv('OPENAI_API_KEY') else 'NOT SET'}")
 print("="*50)
 
 # Uncomment below for production with restricted origins:
@@ -40,9 +48,18 @@ print("="*50)
 #          supports_credentials=False)
 #     print("CORS: Production mode - restricted origins")
 
-client = OpenAI()  # Will automatically use OPENAI_API_KEY from environment
+try:
+    client = OpenAI()  # Will automatically use OPENAI_API_KEY from environment
+    print("✅ OpenAI client initialized successfully")
+except Exception as e:
+    print(f"❌ Error initializing OpenAI client: {e}")
+    client = None
 
-init_db()
+try:
+    init_db()
+    print("✅ Database initialized successfully")
+except Exception as e:
+    print(f"❌ Error initializing database: {e}")
 
 DB_FILE = 'database.db'
 
