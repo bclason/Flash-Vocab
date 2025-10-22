@@ -36,18 +36,6 @@ print(f"FRONTEND_URL: {os.getenv('FRONTEND_URL', 'NOT SET')}")
 print(f"OPENAI_API_KEY: {'SET' if os.getenv('OPENAI_API_KEY') else 'NOT SET'}")
 print("="*50)
 
-# Uncomment below for production with restricted origins:
-# if os.getenv('FLASK_ENV') == 'development':
-#     CORS(app)
-#     print("CORS: Development mode - allowing all origins")
-# else:
-#     CORS(app, 
-#          origins=allowed_origins,
-#          allow_headers=["Content-Type", "Authorization"],
-#          methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-#          supports_credentials=False)
-#     print("CORS: Production mode - restricted origins")
-
 try:
     client = OpenAI()  # Will automatically use OPENAI_API_KEY from environment
     print("✅ OpenAI client initialized successfully")
@@ -70,13 +58,13 @@ def get_db_connection():
     return conn
 
 
-# Add CORS headers to all responses
-@app.after_request
-def after_request(response):
-    response.headers.add('Access-Control-Allow-Origin', '*')
-    response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
-    response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
-    return response
+# # Add CORS headers to all responses
+# @app.after_request
+# def after_request(response):
+#     response.headers.add('Access-Control-Allow-Origin', '*')
+#     response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
+#     response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
+#     return response
 
 # Test endpoint to verify CORS
 @app.route('/test', methods=['GET'])
