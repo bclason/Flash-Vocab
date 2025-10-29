@@ -67,6 +67,10 @@ def get_db_connection():
 #     return response
 
 # Test endpoint to verify CORS
+@app.route('/health', methods=['GET'])
+def health_check():
+    return jsonify({'status': 'healthy', 'message': 'Backend is running'}), 200
+
 @app.route('/test', methods=['GET'])
 def test_cors():
     return jsonify({
