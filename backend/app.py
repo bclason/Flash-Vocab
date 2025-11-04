@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_from_directory
 from openai import OpenAI
 from flask_cors import CORS
 import sqlite3
@@ -324,6 +324,17 @@ Words to group: {words}"""
     except Exception as e:
         print(f"Error in group_words: {str(e)}")
         return jsonify({'error': f'Internal server error: {str(e)}'}), 500
+    
+
+
+@app.route('/', defaults={'path': ''})
+@app.route('/<path:path>')
+def serve(path):
+    if path != "" and os.path.exists(f"static/{path}"):
+        return send_from_directory('static', path)
+    else:
+        return send_from_directory('static', 'index.html')
+
 
 
 if __name__ == '__main__':
