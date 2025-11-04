@@ -12,7 +12,6 @@ import Medley from './pages/medley';
 
 export default function App() {
   return (
-    <Router>
       <Routes>
         <Route path="/" element={<Dashboard />} />
         <Route path="/edit" element={<Edit/>} />
@@ -22,6 +21,5 @@ export default function App() {
         <Route path="/chunking" element={<Chunking />} />
         <Route path="/medley" element={<Medley />} />
       </Routes>
-    </Router>
   );
 }
