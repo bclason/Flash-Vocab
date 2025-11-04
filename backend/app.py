@@ -14,7 +14,7 @@ try:
 except Exception as e:
     print(f"❌ Error loading environment variables: {e}")
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder='static', static_url_path='')
 print("✅ Flask app created")
 
 # Configure CORS
@@ -327,15 +327,15 @@ Words to group: {words}"""
     
 
 
-@app.route('/', defaults={'path': ''})
+@app.route('/')
+def serve_index():
+    return send_from_directory(app.static_folder, 'index.html')
+
 @app.route('/<path:path>')
-def serve(path):
-    if path != "" and os.path.exists(f"static/{path}"):
-        return send_from_directory('static', path)
-    else:
-        return send_from_directory('static', 'index.html')
-
-
+def serve_static_files(path):
+    if os.path.exists(os.path.join(app.static_folder, path)):
+        return send_from_directory(app.static_folder, path)
+    return send_from_directory(app.static_folder, 'index.html')
 
 if __name__ == '__main__':
     import os
