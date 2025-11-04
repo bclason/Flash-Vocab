@@ -18,23 +18,23 @@ app = Flask(__name__)
 print("✅ Flask app created")
 
 # Configure CORS
-try:
-    CORS(app, origins=[
-        "https://flash-vocab-ben-clasons-projects.vercel.app",  # New Vercel URL
-        "https://flash-vocab-delta.vercel.app",  # Old Vercel URL (backup)  
-        "http://localhost:3000"  # Development
-    ], methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"])
-    print("✅ CORS configured successfully")
-except Exception as e:
-    print(f"❌ Error configuring CORS: {e}")
+# try:
+#     CORS(app, origins=[
+#         "https://flash-vocab-ben-clasons-projects.vercel.app",  # New Vercel URL
+#         "https://flash-vocab-delta.vercel.app",  # Old Vercel URL (backup)  
+#         "http://localhost:3000"  # Development
+#     ], methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"])
+#     print("✅ CORS configured successfully")
+# except Exception as e:
+#     print(f"❌ Error configuring CORS: {e}")
 
-# Debug info
-print("="*50)
-print("FLASK APP STARTING")
-print(f"FLASK_ENV: {os.getenv('FLASK_ENV', 'NOT SET')}")
-print(f"FRONTEND_URL: {os.getenv('FRONTEND_URL', 'NOT SET')}")
-print(f"OPENAI_API_KEY: {'SET' if os.getenv('OPENAI_API_KEY') else 'NOT SET'}")
-print("="*50)
+# # Debug info
+# print("="*50)
+# print("FLASK APP STARTING")
+# print(f"FLASK_ENV: {os.getenv('FLASK_ENV', 'NOT SET')}")
+# print(f"FRONTEND_URL: {os.getenv('FRONTEND_URL', 'NOT SET')}")
+# print(f"OPENAI_API_KEY: {'SET' if os.getenv('OPENAI_API_KEY') else 'NOT SET'}")
+# print("="*50)
 
 try:
     client = OpenAI()  # Will automatically use OPENAI_API_KEY from environment
@@ -67,19 +67,19 @@ def get_db_connection():
 #     return response
 
 # Test endpoint to verify CORS
-@app.route('/health', methods=['GET'])
-def health_check():
-    return jsonify({'status': 'healthy', 'message': 'Backend is running'}), 200
+# @app.route('/health', methods=['GET'])
+# def health_check():
+#     return jsonify({'status': 'healthy', 'message': 'Backend is running'}), 200
 
-@app.route('/test', methods=['GET'])
-def test_cors():
-    return jsonify({
-        'message': 'Backend is working!',
-        'cors_status': 'Allowing all origins',
-        'frontend_url': os.getenv('FRONTEND_URL', 'NOT SET'),
-        'flask_env': os.getenv('FLASK_ENV', 'NOT SET'),
-        'all_env_vars': list(os.environ.keys())
-    })
+# @app.route('/test', methods=['GET'])
+# def test_cors():
+#     return jsonify({
+#         'message': 'Backend is working!',
+#         'cors_status': 'Allowing all origins',
+#         'frontend_url': os.getenv('FRONTEND_URL', 'NOT SET'),
+#         'flask_env': os.getenv('FLASK_ENV', 'NOT SET'),
+#         'all_env_vars': list(os.environ.keys())
+#     })
 
 # get all lists
 @app.route('/lists', methods=['GET'])
