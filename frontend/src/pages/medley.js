@@ -127,7 +127,7 @@ export default function Medley() {
           {!currentMode && (
             <button
               type="button"
-              onClick={() => navigate('/grouping', { state: { listId, listName } })}
+              onClick={() => navigate('/chunking', { state: { listId, listName } })}
             >
               Chunking
             </button>

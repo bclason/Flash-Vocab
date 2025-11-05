@@ -67,10 +67,6 @@ except Exception as e:
     print(f"❌ Error initializing database: {e}")
 
 DB_FILE = '/var/www/Flash-Vocab/backend/database.db'
-print("DB_FILE:", DB_FILE)
-print("Exists:", os.path.exists(DB_FILE))
-print("CWD:", os.getcwd())
-
 
 def get_db_connection():
     conn = sqlite3.connect(DB_FILE)
