@@ -66,7 +66,7 @@ try:
 except Exception as e:
     print(f"❌ Error initializing database: {e}")
 
-DB_FILE = 'database.db'
+DB_FILE = '/var/www/Flash-Vocab/backend/database.db'
 
 
 def get_db_connection():
