@@ -6,6 +6,7 @@ from models import init_db
 import datetime
 from dotenv import load_dotenv
 import os
+import logging
 
 # Load environment variables
 try:
@@ -30,6 +31,16 @@ except Exception as e:
 
 app = Flask(__name__, static_folder='static', static_url_path='')
 print("✅ Flask app created")
+
+# Set up logging
+logging.basicConfig(
+    level=logging.DEBUG,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler('flask_debug.log'),
+        logging.StreamHandler()
+    ]
+)
 
 # Configure CORS
 try:
@@ -150,6 +161,7 @@ def update_list(id):
     try:
         data = request.get_json()
         print(f"DEBUG: PUT /lists/{id} received data: {data}")
+        logging.debug(f"PUT /lists/{id} received data: {data}")
         
         if not data:
             return jsonify({'error': 'No JSON data provided'}), 400
@@ -180,7 +192,9 @@ def update_list(id):
 
         return jsonify({'id': id, 'name': name, 'last_used': last_used})
     except Exception as e:
-        print(f"Error in update_list: {str(e)}")
+        error_msg = f"Error in update_list: {str(e)}"
+        print(error_msg)
+        logging.error(error_msg)
         return jsonify({'error': f'Internal server error: {str(e)}'}), 500
 
 
@@ -306,7 +320,9 @@ def update_card(id):
         return jsonify({'message': 'Card updated successfully'})
         
     except Exception as e:
-        print(f"ERROR in update_card: {str(e)}")
+        error_msg = f"ERROR in update_card: {str(e)}"
+        print(error_msg)
+        logging.error(error_msg)
         return jsonify({'error': f'Internal server error: {str(e)}'}), 500
 
 
