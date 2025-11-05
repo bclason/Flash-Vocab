@@ -397,6 +397,12 @@ def serve_static_files(path):
         return send_from_directory(app.static_folder, path)
     return send_from_directory(app.static_folder, 'index.html')
 
+import logging
+logging.basicConfig(level=logging.DEBUG)
+app.logger.setLevel(logging.DEBUG)
+app.config['PROPAGATE_EXCEPTIONS'] = True
+
+
 if __name__ == '__main__':
     import os
     port = int(os.environ.get('PORT', 5000))
