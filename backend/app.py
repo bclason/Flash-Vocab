@@ -20,10 +20,8 @@ print("✅ Flask app created")
 # Configure CORS
 try:
     CORS(app, origins=[
-        "https://flash-vocab-ben-clasons-projects.vercel.app",  # New Vercel URL
-        "https://flash-vocab-delta.vercel.app",  # Old Vercel URL (backup)  
         "http://localhost:3000",  # Development
-        "http://68.43.58.115:3000",  # Self-hosted frontend
+        "http://68.43.58.115:5000",  # Self-hosted frontend
         "http://68.43.58.115"  # Self-hosted frontend (no port)
     ], methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"])
     print("✅ CORS configured successfully")
