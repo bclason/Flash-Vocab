@@ -18,23 +18,25 @@ app = Flask(__name__, static_folder='static', static_url_path='')
 print("✅ Flask app created")
 
 # Configure CORS
-# try:
-#     CORS(app, origins=[
-#         "https://flash-vocab-ben-clasons-projects.vercel.app",  # New Vercel URL
-#         "https://flash-vocab-delta.vercel.app",  # Old Vercel URL (backup)  
-#         "http://localhost:3000"  # Development
-#     ], methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"])
-#     print("✅ CORS configured successfully")
-# except Exception as e:
-#     print(f"❌ Error configuring CORS: {e}")
+try:
+    CORS(app, origins=[
+        "https://flash-vocab-ben-clasons-projects.vercel.app",  # New Vercel URL
+        "https://flash-vocab-delta.vercel.app",  # Old Vercel URL (backup)  
+        "http://localhost:3000",  # Development
+        "http://68.43.58.115:3000",  # Self-hosted frontend
+        "http://68.43.58.115"  # Self-hosted frontend (no port)
+    ], methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"])
+    print("✅ CORS configured successfully")
+except Exception as e:
+    print(f"❌ Error configuring CORS: {e}")
 
-# # Debug info
-# print("="*50)
-# print("FLASK APP STARTING")
-# print(f"FLASK_ENV: {os.getenv('FLASK_ENV', 'NOT SET')}")
-# print(f"FRONTEND_URL: {os.getenv('FRONTEND_URL', 'NOT SET')}")
-# print(f"OPENAI_API_KEY: {'SET' if os.getenv('OPENAI_API_KEY') else 'NOT SET'}")
-# print("="*50)
+# Debug info
+print("="*50)
+print("FLASK APP STARTING")
+print(f"FLASK_ENV: {os.getenv('FLASK_ENV', 'NOT SET')}")
+print(f"FRONTEND_URL: {os.getenv('FRONTEND_URL', 'NOT SET')}")
+print(f"OPENAI_API_KEY: {'SET' if os.getenv('OPENAI_API_KEY') else 'NOT SET'}")
+print("="*50)
 
 try:
     client = OpenAI()  # Will automatically use OPENAI_API_KEY from environment
@@ -127,20 +129,26 @@ def create_list():
 
 @app.route('/lists/<int:id>', methods=['PUT'])
 def update_list(id):
-    data = request.get_json()
-    name = data.get('name')
-    last_used = (datetime.datetime.now()).timestamp()
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({'error': 'No JSON data provided'}), 400
+            
+        name = data.get('name')
+        last_used = data.get('last_used') or (datetime.datetime.now()).timestamp()
 
-    if not name:
-        return jsonify({'error': 'Name is required'}), 400
+        if not name:
+            return jsonify({'error': 'Name is required'}), 400
 
-    conn = get_db_connection()
-    conn.execute('UPDATE lists SET name = ?, last_used = ? WHERE id = ?', (name, last_used, id))
-    conn.commit()
-    conn.close()
+        conn = get_db_connection()
+        conn.execute('UPDATE lists SET name = ?, last_used = ? WHERE id = ?', (name, last_used, id))
+        conn.commit()
+        conn.close()
 
-    # return jsonify({'message': 'List updated successfully'})
-    return jsonify({'id': id, 'name': name, 'last_used': last_used})
+        return jsonify({'id': id, 'name': name, 'last_used': last_used})
+    except Exception as e:
+        print(f"Error in update_list: {str(e)}")
+        return jsonify({'error': f'Internal server error: {str(e)}'}), 500
 
 
 @app.route('/lists/<int:id>', methods=['DELETE'])
