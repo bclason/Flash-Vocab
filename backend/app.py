@@ -9,12 +9,22 @@ import os
 
 # Load environment variables
 try:
-    # Load from current directory and parent directory
-    load_dotenv()  # Current directory
-    load_dotenv(dotenv_path='.env')  # Explicit path
-    print("✅ Environment variables loaded successfully")
+    # Try multiple locations for .env file
+    env_paths = ['.env', '../.env', '../../.env']
+    env_loaded = False
+    
+    for env_path in env_paths:
+        if os.path.exists(env_path):
+            load_dotenv(dotenv_path=env_path)
+            print(f"✅ Environment variables loaded from {env_path}")
+            env_loaded = True
+            break
+    
+    if not env_loaded:
+        print("⚠️ No .env file found, using system environment variables")
+    
     print(f"DEBUG: Working directory: {os.getcwd()}")
-    print(f"DEBUG: .env file exists: {os.path.exists('.env')}")
+    print(f"DEBUG: Checked paths: {env_paths}")
 except Exception as e:
     print(f"❌ Error loading environment variables: {e}")
 
@@ -139,11 +149,26 @@ def create_list():
 def update_list(id):
     try:
         data = request.get_json()
+        print(f"DEBUG: PUT /lists/{id} received data: {data}")
+        
         if not data:
             return jsonify({'error': 'No JSON data provided'}), 400
             
         name = data.get('name')
-        last_used = data.get('last_used') or (datetime.datetime.now()).timestamp()
+        last_used_input = data.get('last_used')
+        
+        # Handle different last_used formats
+        if last_used_input:
+            if isinstance(last_used_input, str):
+                # Convert string timestamp to number
+                try:
+                    last_used = datetime.datetime.fromisoformat(last_used_input.replace(' ', 'T')).timestamp()
+                except ValueError:
+                    last_used = datetime.datetime.now().timestamp()
+            else:
+                last_used = last_used_input
+        else:
+            last_used = datetime.datetime.now().timestamp()
 
         if not name:
             return jsonify({'error': 'Name is required'}), 400
