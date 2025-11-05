@@ -9,8 +9,12 @@ import os
 
 # Load environment variables
 try:
-    load_dotenv()
+    # Load from current directory and parent directory
+    load_dotenv()  # Current directory
+    load_dotenv(dotenv_path='.env')  # Explicit path
     print("✅ Environment variables loaded successfully")
+    print(f"DEBUG: Working directory: {os.getcwd()}")
+    print(f"DEBUG: .env file exists: {os.path.exists('.env')}")
 except Exception as e:
     print(f"❌ Error loading environment variables: {e}")
 
@@ -22,8 +26,7 @@ try:
     CORS(app, origins=[
         "http://localhost:3000",  # Development
         "http://68.43.58.115:3000",  # Self-hosted frontend on port 3000
-        "http://68.43.58.115:5000",  # Self-hosted frontend on port 5000
-        "http://68.43.58.115",  # Self-hosted frontend (no port)
+        "http://68.43.58.115",  # Self-hosted frontend (port 80)
         "*"  # Allow all origins for debugging (remove in production)
     ], methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"])
     print("✅ CORS configured successfully")
@@ -80,8 +83,12 @@ def test_cors():
         'cors_status': 'Allowing all origins',
         'frontend_url': os.getenv('FRONTEND_URL', 'NOT SET'),
         'flask_env': os.getenv('FLASK_ENV', 'NOT SET'),
+        'openai_key_set': 'SET' if os.getenv('OPENAI_API_KEY') else 'NOT SET',
         'database_file': DB_FILE,
-        'database_exists': os.path.exists(DB_FILE)
+        'database_exists': os.path.exists(DB_FILE),
+        'working_directory': os.getcwd(),
+        'env_file_exists': os.path.exists('.env'),
+        'port_info': 'Running on port 80 (no :5000 needed)'
     })
 
 # get all lists
