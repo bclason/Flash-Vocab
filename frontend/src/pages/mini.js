@@ -26,7 +26,7 @@ export default function MiniQuiz() {
         return res.json();
       })
       .then(data => {
-        console.log('Fetched cards:', data);
+        // console.log('Fetched cards:', data);
         if (data && Array.isArray(data)) {
           setCards(data);
         } else {

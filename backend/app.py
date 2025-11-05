@@ -21,8 +21,10 @@ print("✅ Flask app created")
 try:
     CORS(app, origins=[
         "http://localhost:3000",  # Development
-        "http://68.43.58.115:5000",  # Self-hosted frontend
-        "http://68.43.58.115"  # Self-hosted frontend (no port)
+        "http://68.43.58.115:3000",  # Self-hosted frontend on port 3000
+        "http://68.43.58.115:5000",  # Self-hosted frontend on port 5000
+        "http://68.43.58.115",  # Self-hosted frontend (no port)
+        "*"  # Allow all origins for debugging (remove in production)
     ], methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"])
     print("✅ CORS configured successfully")
 except Exception as e:
@@ -67,19 +69,20 @@ def get_db_connection():
 #     return response
 
 # Test endpoint to verify CORS
-# @app.route('/health', methods=['GET'])
-# def health_check():
-#     return jsonify({'status': 'healthy', 'message': 'Backend is running'}), 200
+@app.route('/health', methods=['GET'])
+def health_check():
+    return jsonify({'status': 'healthy', 'message': 'Backend is running'}), 200
 
-# @app.route('/test', methods=['GET'])
-# def test_cors():
-#     return jsonify({
-#         'message': 'Backend is working!',
-#         'cors_status': 'Allowing all origins',
-#         'frontend_url': os.getenv('FRONTEND_URL', 'NOT SET'),
-#         'flask_env': os.getenv('FLASK_ENV', 'NOT SET'),
-#         'all_env_vars': list(os.environ.keys())
-#     })
+@app.route('/test', methods=['GET'])
+def test_cors():
+    return jsonify({
+        'message': 'Backend is working!',
+        'cors_status': 'Allowing all origins',
+        'frontend_url': os.getenv('FRONTEND_URL', 'NOT SET'),
+        'flask_env': os.getenv('FLASK_ENV', 'NOT SET'),
+        'database_file': DB_FILE,
+        'database_exists': os.path.exists(DB_FILE)
+    })
 
 # get all lists
 @app.route('/lists', methods=['GET'])
@@ -206,58 +209,73 @@ def create_card():
 # keeping this seperate from lists should be fine because each card has a unique id
 @app.route('/cards/<int:id>', methods=['PUT'])
 def update_card(id):
-    data = request.get_json()
-    
-    # Handle field-value format (from edit page)
-    field = data.get('field')
-    value = data.get('value')
-    
-    # Handle direct field format (from accuracy updates)
-    term = data.get('term')
-    translation = data.get('translation')
-    secondary_translation = data.get('secondary_translation', '')
-    correct_attempts = data.get('correct_attempts')
-    total_attempts = data.get('total_attempts')
-    starred = data.get('starred')
-    chunk_id = data.get('chunk_id')
-
-    conn = get_db_connection()
-    
-    # Handle accuracy updates
-    if correct_attempts is not None and total_attempts is not None:
-        conn.execute(
-            'UPDATE cards SET correct_attempts = ?, total_attempts = ? WHERE id = ?',
-            (correct_attempts, total_attempts, id)
-        )
-    # Handle single field updates (field-value format)
-    elif field and value is not None:
-        allowed_fields = ['term', 'translation', 'secondary_translation', 'starred', 'chunk_id']
-        if field not in allowed_fields:
-            conn.close()
-            return jsonify({'error': f'Invalid field: {field}'}), 400
+    try:
+        data = request.get_json()
+        print(f"DEBUG: PUT /cards/{id} received data: {data}")
         
-        query = f"UPDATE cards SET {field} = ? WHERE id = ?"
-        conn.execute(query, (value, id))
-    # Handle chunk_id updates
-    elif chunk_id is not None:
-        conn.execute(
-            'UPDATE cards SET chunk_id = ? WHERE id = ?',
-            (chunk_id, id)
-        )
-    # Handle direct field updates (for backward compatibility)
-    elif term and translation:
-        conn.execute(
-            'UPDATE cards SET term = ?, translation = ?, secondary_translation = ? WHERE id = ?',
-            (term, translation, secondary_translation, id)
-        )
-    else:
-        conn.close()
-        return jsonify({'error': 'Invalid update data - missing required fields'}), 400
-    
-    conn.commit()
-    conn.close()
+        if not data:
+            return jsonify({'error': 'No JSON data provided'}), 400
+        
+        # Handle field-value format (from edit page)
+        field = data.get('field')
+        value = data.get('value')
+        
+        # Handle direct field format (from accuracy updates)
+        term = data.get('term')
+        translation = data.get('translation')
+        secondary_translation = data.get('secondary_translation', '')
+        correct_attempts = data.get('correct_attempts')
+        total_attempts = data.get('total_attempts')
+        starred = data.get('starred')
+        chunk_id = data.get('chunk_id')
 
-    return jsonify({'message': 'Card updated successfully'})
+        conn = get_db_connection()
+        
+        # Handle accuracy updates
+        if correct_attempts is not None and total_attempts is not None:
+            print(f"DEBUG: Updating accuracy for card {id}: {correct_attempts}/{total_attempts}")
+            conn.execute(
+                'UPDATE cards SET correct_attempts = ?, total_attempts = ? WHERE id = ?',
+                (correct_attempts, total_attempts, id)
+            )
+        # Handle single field updates (field-value format)
+        elif field and value is not None:
+            allowed_fields = ['term', 'translation', 'secondary_translation', 'starred', 'chunk_id']
+            if field not in allowed_fields:
+                conn.close()
+                return jsonify({'error': f'Invalid field: {field}'}), 400
+            
+            print(f"DEBUG: Updating field {field} = {value} for card {id}")
+            query = f"UPDATE cards SET {field} = ? WHERE id = ?"
+            conn.execute(query, (value, id))
+        # Handle chunk_id updates
+        elif chunk_id is not None:
+            print(f"DEBUG: Updating chunk_id = {chunk_id} for card {id}")
+            conn.execute(
+                'UPDATE cards SET chunk_id = ? WHERE id = ?',
+                (chunk_id, id)
+            )
+        # Handle direct field updates (for backward compatibility)
+        elif term and translation:
+            print(f"DEBUG: Updating term/translation for card {id}")
+            conn.execute(
+                'UPDATE cards SET term = ?, translation = ?, secondary_translation = ? WHERE id = ?',
+                (term, translation, secondary_translation, id)
+            )
+        else:
+            conn.close()
+            print(f"DEBUG: Invalid update data for card {id}: {data}")
+            return jsonify({'error': 'Invalid update data - missing required fields'}), 400
+        
+        conn.commit()
+        conn.close()
+        print(f"DEBUG: Successfully updated card {id}")
+
+        return jsonify({'message': 'Card updated successfully'})
+        
+    except Exception as e:
+        print(f"ERROR in update_card: {str(e)}")
+        return jsonify({'error': f'Internal server error: {str(e)}'}), 500
 
 
 @app.route('/cards/<int:id>', methods=['DELETE'])
