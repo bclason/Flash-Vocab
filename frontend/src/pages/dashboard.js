@@ -13,7 +13,7 @@ export default function Dashboard() {
   useEffect(() => {
     // Fetch all lists from your backend
     fetch(`${config.API_BASE_URL}/lists`, {
-      headers: config.getHeaders()
+      credentials: 'include'  // Include cookies in requests
     })
       .then(res => res.json())
       .then(data => setLists(data))   // Save fetched data into state
@@ -26,7 +26,8 @@ export default function Dashboard() {
     try {
       const response = await fetch(`${config.API_BASE_URL}/lists`, {
         method: 'POST',
-        headers: config.getHeaders(),
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',  // Include cookies in requests
         body: JSON.stringify({})
       });
 
@@ -52,7 +53,7 @@ export default function Dashboard() {
     if (window.confirm('Are you sure you want to delete this list?')) {
       fetch(`${config.API_BASE_URL}/lists/${id}`, {
         method: 'DELETE',
-        headers: config.getHeaders()
+        credentials: 'include'  // Include cookies in requests
       })
         .then(response => {
           if (!response.ok) {

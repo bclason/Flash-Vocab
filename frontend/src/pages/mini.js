@@ -18,7 +18,7 @@ export default function MiniQuiz() {
   useEffect(() => {
     if (!listId) return;
     // Fetch all cards from your backend
-    fetch(`${config.API_BASE_URL}/lists/${listId}/cards`)
+    fetch(`${config.API_BASE_URL}/lists/${listId}/cards`, { credentials: 'include' })
       .then(res => {
         if (!res.ok) {
           throw new Error(`HTTP error! status: ${res.status}`);

@@ -17,7 +17,7 @@ export default function Quiz() {
   // Fetch all cards from your backend
   useEffect(() => {
     if (!listId) return;
-    fetch(`${config.API_BASE_URL}/lists/${listId}/cards`)
+    fetch(`${config.API_BASE_URL}/lists/${listId}/cards`, { credentials: 'include' })
       .then(res => {
         if (!res.ok) {
           throw new Error(`HTTP error! status: ${res.status}`);

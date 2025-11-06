@@ -21,7 +21,7 @@ export default function Chunking() {
   // Fetch cards from the backend
   useEffect(() => {
     if (!listId) return;
-    fetch(`${config.API_BASE_URL}/lists/${listId}/cards`)
+    fetch(`${config.API_BASE_URL}/lists/${listId}/cards`, { credentials: 'include' })
       .then(res => res.json())
       .then(data => {
         if (data && Array.isArray(data)) {
@@ -70,6 +70,7 @@ export default function Chunking() {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ chunk_id: chunkId }),
+          credentials: 'include'
         });
         if (!response.ok) {
           console.error('Failed to update card chunk');
@@ -100,6 +101,7 @@ export default function Chunking() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ words: words }),
+        credentials: 'include'
       });
       if (!response.ok) {
         console.error('Failed to get AI grouping');
@@ -141,6 +143,7 @@ export default function Chunking() {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ chunk_id: newChunkId }),
+            credentials: 'include'
           });
           if (!response.ok) {
             console.error(`Failed to update card ${card.id}`);

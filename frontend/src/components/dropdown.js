@@ -11,7 +11,8 @@ export default function CustomDropdown({ listId, listName }) {
     fetch(`${config.API_BASE_URL}/lists/${listId}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id: listId, name: listName, last_used: new Date().toISOString().slice(0, 19).replace('T', ' ') })
+      body: JSON.stringify({ id: listId, name: listName, last_used: new Date().toISOString().slice(0, 19).replace('T', ' ') }),
+      credentials: 'include'
     })
       .then(res => {
         if (!res.ok) throw new Error('Failed to update stats');

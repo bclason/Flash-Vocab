@@ -29,7 +29,7 @@ export default function Medley() {
   // Fetch all cards and determine available chunks
   useEffect(() => {
     if (!listId) return;
-    fetch(`${config.API_BASE_URL}/lists/${listId}/cards`)
+    fetch(`${config.API_BASE_URL}/lists/${listId}/cards`, { credentials: 'include' })
       .then(res => res.json())
       .then(data => {
         console.log('Fetched all cards:', data);

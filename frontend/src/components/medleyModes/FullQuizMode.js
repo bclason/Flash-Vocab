@@ -31,6 +31,7 @@ export default function Quiz({
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ correct_attempts: new_correct, total_attempts: new_total }),
+        credentials: 'include'
       })
       .then(response => {
         if (!response.ok) {

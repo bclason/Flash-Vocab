@@ -20,7 +20,7 @@ export default function Edit() {
 
   useEffect(() => {
     // Fetch all cards from your backend
-    fetch(`${config.API_BASE_URL}/lists/${listId}/cards`)
+    fetch(`${config.API_BASE_URL}/lists/${listId}/cards`, { credentials: 'include' })
       .then(res => res.json())
       .then(data => {
         setCards(data);
@@ -83,6 +83,7 @@ export default function Edit() {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({name: textEntry}),
+      credentials: 'include'
     });
     if (response.ok) {
       //console.log('List name updated successfully');
@@ -98,6 +99,7 @@ export default function Edit() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ list_id: listId }),
+        credentials: 'include'
       });
 
       if (response.ok) {
@@ -123,7 +125,8 @@ export default function Edit() {
     const response = await fetch(`${config.API_BASE_URL}/cards/${cardId}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ field, value })
+      body: JSON.stringify({ field, value }),
+      credentials: 'include'
     });
     if (response.ok) {
       setCards(prev => prev.map(c => c.id === cardId ? { ...c, [field]: value } : c));
@@ -137,6 +140,7 @@ export default function Edit() {
       try {
         const response = await fetch(`${config.API_BASE_URL}/cards/${cardId}`, {
           method: 'DELETE',
+          credentials: 'include'
         });
         if (response.ok) {
           setCards(cards.filter(card => card.id !== cardId));
@@ -157,6 +161,7 @@ export default function Edit() {
       const response = await fetch(`${config.API_BASE_URL}/lists/${listId}/reset-accuracy`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include'
       });
 
       if (response.ok) {

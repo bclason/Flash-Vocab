@@ -1,11 +1,9 @@
-from flask import Flask, request, jsonify, send_from_directory
+from flask import Flask, request, jsonify, send_from_directory, g
 from openai import OpenAI
 from flask_cors import CORS
-import sqlite3
 from models import init_db
-import datetime
 from dotenv import load_dotenv
-import os
+import os, uuid, sqlite3, datetime
 
 # Load environment variables
 try:
@@ -66,16 +64,98 @@ try:
 except Exception as e:
     print(f"❌ Error initializing database: {e}")
 
-DB_FILE = '/var/www/Flash-Vocab/backend/database.db'
+DB_DIR = '/var/www/Flash-Vocab/backend/databases'
+os.makedirs(DB_DIR, exist_ok=True)
 
-def get_db_connection():
-    conn = sqlite3.connect(DB_FILE)
+def get_device_id():
+    device_id = request.cookies.get('device_id')
+    if not device_id:
+        device_id = str(uuid.uuid4())
+
+    db_path = os.path.join(DB_DIR, f"{device_id}.db")
+
+    if not os.path.exists(db_path):
+        conn = sqlite3.connect(db_path)
+        # Initialize schema for new device database
+        c = conn.cursor()
+        
+        # Create lists table
+        c.execute('''
+        CREATE TABLE IF NOT EXISTS lists (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            last_used TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+        ''')
+
+        # Create cards table
+        c.execute('''
+            CREATE TABLE IF NOT EXISTS cards (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                list_id INTEGER NOT NULL,
+                chunk_id INTEGER default 0,
+                term TEXT DEFAULT '',
+                translation TEXT DEFAULT '',
+                secondary_translation TEXT DEFAULT '',
+                correct_attempts INTEGER DEFAULT 0,
+                total_attempts INTEGER DEFAULT 0,
+                starred BOOLEAN DEFAULT FALSE,
+                FOREIGN KEY (list_id) REFERENCES lists(id) ON DELETE CASCADE
+            )
+        ''')
+        
+        conn.commit()
+        conn.close()
+
+    g.db = sqlite3.connect(db_path)
+    return g.db, device_id
+
+def get_db_connection(device_id):
+    # make sure the databases folder exists
+    os.makedirs(DB_DIR, exist_ok=True)
+
+    # full path for this device's database file
+    db_path = os.path.join(DB_DIR, f"{device_id}.db")
+
+    # check if database needs initialization
+    needs_init = not os.path.exists(db_path)
+
+    # connect to the database
+    conn = sqlite3.connect(db_path)
     conn.row_factory = sqlite3.Row
-    return conn
+    
+    # Initialize schema if this is a new database
+    if needs_init:
+        c = conn.cursor()
+        
+        # Create lists table
+        c.execute('''
+        CREATE TABLE IF NOT EXISTS lists (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            last_used TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+        ''')
 
-def get_device_id_from_request():
-    """Extract device ID from request headers, return None if not provided"""
-    return request.headers.get('X-Device-ID')
+        # Create cards table
+        c.execute('''
+            CREATE TABLE IF NOT EXISTS cards (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                list_id INTEGER NOT NULL,
+                chunk_id INTEGER default 0,
+                term TEXT DEFAULT '',
+                translation TEXT DEFAULT '',
+                secondary_translation TEXT DEFAULT '',
+                correct_attempts INTEGER DEFAULT 0,
+                total_attempts INTEGER DEFAULT 0,
+                starred BOOLEAN DEFAULT FALSE,
+                FOREIGN KEY (list_id) REFERENCES lists(id) ON DELETE CASCADE
+            )
+        ''')
+        
+        conn.commit()
+    
+    return conn
 
 
 # # Add CORS headers to all responses
@@ -87,73 +167,94 @@ def get_device_id_from_request():
 #     return response
 
 # Test endpoint to verify CORS
-@app.route('/health', methods=['GET'])
-def health_check():
-    return jsonify({'status': 'healthy', 'message': 'Backend is running'}), 200
+# @app.route('/health', methods=['GET'])
+# def health_check():
+#     return jsonify({'status': 'healthy', 'message': 'Backend is running'}), 200
 
-@app.route('/test', methods=['GET'])
-def test_cors():
-    return jsonify({
-        'message': 'Backend is working!',
-        'cors_status': 'Allowing all origins',
-        'frontend_url': os.getenv('FRONTEND_URL', 'NOT SET'),
-        'flask_env': os.getenv('FLASK_ENV', 'NOT SET'),
-        'openai_key_set': 'SET' if os.getenv('OPENAI_API_KEY') else 'NOT SET',
-        'database_file': DB_FILE,
-        'database_exists': os.path.exists(DB_FILE),
-        'working_directory': os.getcwd(),
-        'env_file_exists': os.path.exists('.env'),
-        'port_info': 'Running on port 80 (no :5000 needed)'
-    })
+# @app.route('/test', methods=['GET'])
+# def test_cors():
+#     return jsonify({
+#         'message': 'Backend is working!',
+#         'cors_status': 'Allowing all origins',
+#         'frontend_url': os.getenv('FRONTEND_URL', 'NOT SET'),
+#         'flask_env': os.getenv('FLASK_ENV', 'NOT SET'),
+#         'openai_key_set': 'SET' if os.getenv('OPENAI_API_KEY') else 'NOT SET',
+#         'database_file': DB_FILE,
+#         'database_exists': os.path.exists(DB_FILE),
+#         'working_directory': os.getcwd(),
+#         'env_file_exists': os.path.exists('.env'),
+#         'port_info': 'Running on port 80 (no :5000 needed)'
+#     })
 
 # get all lists
 @app.route('/lists', methods=['GET'])
 def get_lists():
-    conn = get_db_connection()
+    device_id = request.cookies.get('device_id')
+    if not device_id:
+        device_id = str(__import__('uuid').uuid4())
+    
+    conn = get_db_connection(device_id)
     lists = conn.execute('SELECT * FROM lists').fetchall()
     conn.close()
 
-    return jsonify([dict(lst) for lst in lists])
+    response = jsonify([dict(lst) for lst in lists])
+    response.set_cookie('device_id', device_id, max_age=31536000)  # 1 year
+    return response
 
 
 
 @app.route('/lists/<int:id>', methods=['GET'])
 def get_list(id):
-    conn = get_db_connection()
+    device_id = request.cookies.get('device_id')
+    if not device_id:
+        return jsonify({'error': 'Device ID not found'}), 400
+        
+    conn = get_db_connection(device_id)
     list_item = conn.execute('SELECT * FROM lists WHERE id = ?', (id,)).fetchone()
     conn.close()
 
     if list_item is None:
         return jsonify({'error': 'List not found'}), 404
 
-    return jsonify(dict(list_item))
+    response = jsonify(dict(list_item))
+    response.set_cookie('device_id', device_id, max_age=31536000)
+    return response
 
 
 
 @app.route('/lists', methods=['POST'])
 def create_list():
+    device_id = request.cookies.get('device_id')
+    if not device_id:
+        device_id = str(uuid.uuid4())
+    
     data = request.get_json()
     name = data.get('name')
     last_used = (datetime.datetime.now()).timestamp()
-    device_id = get_device_id_from_request()  # Get device_id if available, None otherwise
 
-    conn = get_db_connection()
+    conn = get_db_connection(device_id)
     if not name:
         cursor = conn.cursor()
         num_lists = cursor.execute('SELECT COUNT(*) FROM lists').fetchone()[0]
         name = f'List {num_lists + 1}'
 
-    conn.execute('INSERT INTO lists (device_id, name, last_used) VALUES (?, ?, ?)', (device_id, name, last_used))
+    conn.execute('INSERT INTO lists (name, last_used) VALUES (?, ?)', (name, last_used))
     list_id = conn.execute('SELECT last_insert_rowid()').fetchone()[0]
     conn.commit()
     conn.close()
 
-    return jsonify({'id': list_id, 'name': name}), 201
+    response = jsonify({'id': list_id, 'name': name})
+    response.set_cookie('device_id', device_id, max_age=31536000)  # 1 year
+    return response, 201
 
 
 @app.route('/lists/<int:id>', methods=['PUT'])
 def update_list(id):
     try:
+        device_id = request.cookies.get('device_id')
+        if not device_id:
+            return jsonify({'error': 'Device ID not found'}), 400
+            
         data = request.get_json()
         print(f"DEBUG: PUT /lists/{id} received data: {data}")
         
@@ -179,12 +280,14 @@ def update_list(id):
         if not name:
             return jsonify({'error': 'Name is required'}), 400
 
-        conn = get_db_connection()
+        conn = get_db_connection(device_id)
         conn.execute('UPDATE lists SET name = ?, last_used = ? WHERE id = ?', (name, last_used, id))
         conn.commit()
         conn.close()
 
-        return jsonify({'id': id, 'name': name, 'last_used': last_used})
+        response = jsonify({'id': id, 'name': name, 'last_used': last_used})
+        response.set_cookie('device_id', device_id, max_age=31536000)
+        return response
     except Exception as e:
         error_msg = f"Error in update_list: {str(e)}"
         print(error_msg)
@@ -193,46 +296,68 @@ def update_list(id):
 
 @app.route('/lists/<int:id>', methods=['DELETE'])
 def delete_list(id):
-    conn = get_db_connection()
+    device_id = request.cookies.get('device_id')
+    if not device_id:
+        return jsonify({'error': 'Device ID not found'}), 400
+        
+    conn = get_db_connection(device_id)
     conn.execute('DELETE FROM lists WHERE id = ?', (id,))
     conn.commit()
     conn.close()
 
-    return jsonify({'message': 'List deleted successfully'})
+    response = jsonify({'message': 'List deleted successfully'})
+    response.set_cookie('device_id', device_id, max_age=31536000)
+    return response
 
 
 @app.route('/lists/<int:list_id>/cards', methods=['GET'])
 def get_cards_by_list(list_id):
-    conn = get_db_connection()
+    device_id = request.cookies.get('device_id')
+    if not device_id:
+        return jsonify({'error': 'Device ID not found'}), 400
+        
+    conn = get_db_connection(device_id)
     cards = conn.execute('SELECT * FROM cards WHERE list_id = ?', (list_id,)).fetchall()
     conn.close()
 
-    return jsonify([dict(card) for card in cards])
+    response = jsonify([dict(card) for card in cards])
+    response.set_cookie('device_id', device_id, max_age=31536000)
+    return response
 
 
 # do i have to specify the list_id?
 @app.route('/cards/<int:id>', methods=['GET'])
 def get_card(id):
-    conn = get_db_connection()
+    device_id = request.cookies.get('device_id')
+    if not device_id:
+        return jsonify({'error': 'Device ID not found'}), 400
+        
+    conn = get_db_connection(device_id)
     card = conn.execute('SELECT * FROM cards WHERE id = ?', (id,)).fetchone()
     conn.close()
 
     if card is None:
         return jsonify({'error': 'Card not found'}), 404
 
-    return jsonify(dict(card))
+    response = jsonify(dict(card))
+    response.set_cookie('device_id', device_id, max_age=31536000)
+    return response
 
 
 # without nesting this under lists i need to specify the list_id
 @app.route('/cards', methods=['POST'])
 def create_card():
+    device_id = request.cookies.get('device_id')
+    if not device_id:
+        return jsonify({'error': 'Device ID not found'}), 400
+        
     data = request.get_json()
     list_id = data.get('list_id')
 
     if not list_id:
         return jsonify({'error': 'List ID is required'}), 400
 
-    conn = get_db_connection()
+    conn = get_db_connection(device_id)
     cursor = conn.cursor()
     cursor.execute(
         'INSERT INTO cards (list_id) VALUES (?)',
@@ -242,13 +367,19 @@ def create_card():
     new_id = cursor.lastrowid
     conn.close()
 
-    return jsonify({'id': new_id, 'list_id': list_id}), 201
+    response = jsonify({'id': new_id, 'list_id': list_id})
+    response.set_cookie('device_id', device_id, max_age=31536000)
+    return response, 201
 
 
 # keeping this seperate from lists should be fine because each card has a unique id
 @app.route('/cards/<int:id>', methods=['PUT'])
 def update_card(id):
     try:
+        device_id = request.cookies.get('device_id')
+        if not device_id:
+            return jsonify({'error': 'Device ID not found'}), 400
+            
         data = request.get_json()
         print(f"DEBUG: PUT /cards/{id} received data: {data}")
         
@@ -268,7 +399,7 @@ def update_card(id):
         starred = data.get('starred')
         chunk_id = data.get('chunk_id')
 
-        conn = get_db_connection()
+        conn = get_db_connection(device_id)
         
         # Handle accuracy updates
         if correct_attempts is not None and total_attempts is not None:
@@ -310,7 +441,9 @@ def update_card(id):
         conn.close()
         print(f"DEBUG: Successfully updated card {id}")
 
-        return jsonify({'message': 'Card updated successfully'})
+        response = jsonify({'message': 'Card updated successfully'})
+        response.set_cookie('device_id', device_id, max_age=31536000)
+        return response
         
     except Exception as e:
         error_msg = f"ERROR in update_card: {str(e)}"
@@ -320,17 +453,27 @@ def update_card(id):
 
 @app.route('/cards/<int:id>', methods=['DELETE'])
 def delete_card(id):
-    conn = get_db_connection()
+    device_id = request.cookies.get('device_id')
+    if not device_id:
+        return jsonify({'error': 'Device ID not found'}), 400
+        
+    conn = get_db_connection(device_id)
     conn.execute('DELETE FROM cards WHERE id = ?', (id,))
     conn.commit()
     conn.close()
 
-    return jsonify({'message': 'Card deleted successfully'})
+    response = jsonify({'message': 'Card deleted successfully'})
+    response.set_cookie('device_id', device_id, max_age=31536000)
+    return response
 
 
 @app.route('/lists/<int:list_id>/reset-accuracy', methods=['PUT'])
 def reset_list_accuracy(list_id):
-    conn = get_db_connection()
+    device_id = request.cookies.get('device_id')
+    if not device_id:
+        return jsonify({'error': 'Device ID not found'}), 400
+        
+    conn = get_db_connection(device_id)
     conn.execute(
         'UPDATE cards SET correct_attempts = 0, total_attempts = 0 WHERE list_id = ?', 
         (list_id,)
@@ -338,7 +481,9 @@ def reset_list_accuracy(list_id):
     conn.commit()
     conn.close()
 
-    return jsonify({'message': 'All card accuracies reset successfully'})
+    response = jsonify({'message': 'All card accuracies reset successfully'})
+    response.set_cookie('device_id', device_id, max_age=31536000)
+    return response
 
 
 
