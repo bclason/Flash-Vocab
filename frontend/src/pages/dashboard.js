@@ -12,7 +12,9 @@ export default function Dashboard() {
 
   useEffect(() => {
     // Fetch all lists from your backend
-    fetch(`${config.API_BASE_URL}/lists`)
+    fetch(`${config.API_BASE_URL}/lists`, {
+      headers: config.getHeaders()
+    })
       .then(res => res.json())
       .then(data => setLists(data))   // Save fetched data into state
       .catch(err => console.error('Failed to fetch lists', err));
@@ -24,7 +26,7 @@ export default function Dashboard() {
     try {
       const response = await fetch(`${config.API_BASE_URL}/lists`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: config.getHeaders(),
         body: JSON.stringify({})
       });
 
@@ -50,6 +52,7 @@ export default function Dashboard() {
     if (window.confirm('Are you sure you want to delete this list?')) {
       fetch(`${config.API_BASE_URL}/lists/${id}`, {
         method: 'DELETE',
+        headers: config.getHeaders()
       })
         .then(response => {
           if (!response.ok) {

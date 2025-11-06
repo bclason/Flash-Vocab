@@ -8,6 +8,7 @@ def init_db():
     c.execute('''
     CREATE TABLE IF NOT EXISTS lists (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
+        device_id TEXT NOT NULL,
         name TEXT NOT NULL,
         last_used TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
@@ -28,6 +29,12 @@ def init_db():
             FOREIGN KEY (list_id) REFERENCES lists(id) ON DELETE CASCADE
         )
     ''')
+
+    # Add device_id column to existing tables if they don't have it
+    try:
+        c.execute('ALTER TABLE lists ADD COLUMN device_id TEXT')
+    except sqlite3.OperationalError:
+        pass  # Column already exists
 
     conn.commit()
     conn.close()

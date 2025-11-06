@@ -73,6 +73,13 @@ def get_db_connection():
     conn.row_factory = sqlite3.Row
     return conn
 
+def get_device_id_from_request():
+    """Extract device ID from request headers"""
+    device_id = request.headers.get('X-Device-ID')
+    if not device_id:
+        return jsonify({'error': 'Device ID required'}), 400
+    return device_id
+
 
 # # Add CORS headers to all responses
 # @app.after_request
@@ -102,11 +109,15 @@ def test_cors():
         'port_info': 'Running on port 80 (no :5000 needed)'
     })
 
-# get all lists
+# get all lists for this device
 @app.route('/lists', methods=['GET'])
 def get_lists():
+    device_id = get_device_id_from_request()
+    if isinstance(device_id, tuple):  # Error response
+        return device_id
+    
     conn = get_db_connection()
-    lists = conn.execute('SELECT * FROM lists').fetchall()
+    lists = conn.execute('SELECT * FROM lists WHERE device_id = ?', (device_id,)).fetchall()
     conn.close()
 
     return jsonify([dict(lst) for lst in lists])
@@ -115,8 +126,12 @@ def get_lists():
 
 @app.route('/lists/<int:id>', methods=['GET'])
 def get_list(id):
+    device_id = get_device_id_from_request()
+    if isinstance(device_id, tuple):  # Error response
+        return device_id
+    
     conn = get_db_connection()
-    list_item = conn.execute('SELECT * FROM lists WHERE id = ?', (id,)).fetchone()
+    list_item = conn.execute('SELECT * FROM lists WHERE id = ? AND device_id = ?', (id, device_id)).fetchone()
     conn.close()
 
     if list_item is None:
@@ -128,6 +143,10 @@ def get_list(id):
 
 @app.route('/lists', methods=['POST'])
 def create_list():
+    device_id = get_device_id_from_request()
+    if isinstance(device_id, tuple):  # Error response
+        return device_id
+        
     data = request.get_json()
     name = data.get('name')
     last_used = (datetime.datetime.now()).timestamp()
@@ -135,10 +154,10 @@ def create_list():
     conn = get_db_connection()
     if not name:
         cursor = conn.cursor()
-        num_lists = cursor.execute('SELECT COUNT(*) FROM lists').fetchone()[0]
+        num_lists = cursor.execute('SELECT COUNT(*) FROM lists WHERE device_id = ?', (device_id,)).fetchone()[0]
         name = f'List {num_lists + 1}'
 
-    conn.execute('INSERT INTO lists (name, last_used) VALUES (?, ?)', (name, last_used))
+    conn.execute('INSERT INTO lists (device_id, name, last_used) VALUES (?, ?, ?)', (device_id, name, last_used))
     list_id = conn.execute('SELECT last_insert_rowid()').fetchone()[0]
     conn.commit()
     conn.close()
@@ -149,6 +168,10 @@ def create_list():
 @app.route('/lists/<int:id>', methods=['PUT'])
 def update_list(id):
     try:
+        device_id = get_device_id_from_request()
+        if isinstance(device_id, tuple):  # Error response
+            return device_id
+            
         data = request.get_json()
         print(f"DEBUG: PUT /lists/{id} received data: {data}")
         
@@ -175,7 +198,7 @@ def update_list(id):
             return jsonify({'error': 'Name is required'}), 400
 
         conn = get_db_connection()
-        conn.execute('UPDATE lists SET name = ?, last_used = ? WHERE id = ?', (name, last_used, id))
+        conn.execute('UPDATE lists SET name = ?, last_used = ? WHERE id = ? AND device_id = ?', (name, last_used, id, device_id))
         conn.commit()
         conn.close()
 
@@ -188,8 +211,12 @@ def update_list(id):
 
 @app.route('/lists/<int:id>', methods=['DELETE'])
 def delete_list(id):
+    device_id = get_device_id_from_request()
+    if isinstance(device_id, tuple):  # Error response
+        return device_id
+        
     conn = get_db_connection()
-    conn.execute('DELETE FROM lists WHERE id = ?', (id,))
+    conn.execute('DELETE FROM lists WHERE id = ? AND device_id = ?', (id, device_id))
     conn.commit()
     conn.close()
 
@@ -198,7 +225,17 @@ def delete_list(id):
 
 @app.route('/lists/<int:list_id>/cards', methods=['GET'])
 def get_cards_by_list(list_id):
+    device_id = get_device_id_from_request()
+    if isinstance(device_id, tuple):  # Error response
+        return device_id
+        
     conn = get_db_connection()
+    # First verify the list belongs to this device
+    list_check = conn.execute('SELECT id FROM lists WHERE id = ? AND device_id = ?', (list_id, device_id)).fetchone()
+    if not list_check:
+        conn.close()
+        return jsonify({'error': 'List not found or not authorized'}), 404
+        
     cards = conn.execute('SELECT * FROM cards WHERE list_id = ?', (list_id,)).fetchall()
     conn.close()
 
