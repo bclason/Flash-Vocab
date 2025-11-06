@@ -72,7 +72,7 @@ export default function FlashcardMode({
       ) : (
         <p style={{ textAlign: 'center', fontSize: '18px', padding: '2rem' }}>
           {cards.length === 0 
-            ? 'Loading flashcards...' 
+            ? 'No cards found. Use the edit page to add some!' 
             : practiceStarredOnly && starredCount === 0
             ? 'No starred cards found. Star some cards in the edit page first!'
             : practiceStarredOnly 

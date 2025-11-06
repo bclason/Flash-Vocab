@@ -91,7 +91,12 @@ export default function Quiz({
         justifyContent: 'center',
         display: 'flex'
       }}>
-        {filteredCards.length === 0 ? (
+        {cards.length === 0 ? (
+          <div style={{ fontSize: '1.5rem', padding: '1rem' }}>
+            No cards found. Use the edit page to add some!
+          </div>
+        ) 
+        : filteredCards.length === 0 ? (
           <div style={{ fontSize: '1.5rem', padding: '1rem' }}>
             No starred cards found
           </div>

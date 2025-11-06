@@ -166,7 +166,7 @@ export default function MiniQuizMode({
   if (cards.length === 0) {
     return (
       <div style={{ textAlign: 'center', padding: '2rem' }}>
-        Loading cards...
+        No cards found. Use the edit page to add some!
       </div>
     );
   }
