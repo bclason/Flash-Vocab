@@ -37,7 +37,7 @@ try:
         "http://localhost:3000",  # Development
         "http://68.43.58.115:3000",  # Self-hosted frontend on port 3000
         "http://68.43.58.115",  # Self-hosted frontend (port 80)
-        "*"  # Allow all origins for debugging (remove in production)
+        "https://flashvocab.benclason.com",  # Production frontend
     ], methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"])
     print("✅ CORS configured successfully")
 except Exception as e:
