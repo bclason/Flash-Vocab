@@ -39,7 +39,10 @@ try:
         "http://68.43.58.115",  # Self-hosted frontend (port 80)
         "https://flashvocab.benclason.com",  # Production frontend
         "https://api.flashvocab.benclason.com"  # Production API endpoint (if needed)
-    ], methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"])
+    ], 
+        methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+        supports_credentials=True
+    )
     print("✅ CORS configured successfully")
 except Exception as e:
     print(f"❌ Error configuring CORS: {e}")
