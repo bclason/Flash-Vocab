@@ -34,14 +34,11 @@ print("✅ Flask app created")
 # Configure CORS
 try:
     CORS(app, supports_credentials=True, origins=[
-        "http://localhost:3000",
-        "http://68.43.58.115",
-        "http://68.43.58.115:3000",
+        # "https://api.flashvocab.benclason.com",
         "https://flashvocab.benclason.com",
     ], 
         methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     )
-    print("✅ CORS configured successfully")
 except Exception as e:
     print(f"❌ Error configuring CORS: {e}")
 
