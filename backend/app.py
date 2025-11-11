@@ -31,24 +31,7 @@ print("✅ Flask app created")
 
 # Debug mode - print statements for troubleshooting
 
-# Configure CORS
-try:
-    CORS(app, supports_credentials=True, origins=[
-        # "https://api.flashvocab.benclason.com",
-        "https://flashvocab.benclason.com",
-    ], 
-        methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    )
-except Exception as e:
-    print(f"❌ Error configuring CORS: {e}")
-
-# Debug info
-print("="*50)
-print("FLASK APP STARTING")
-print(f"FLASK_ENV: {os.getenv('FLASK_ENV', 'NOT SET')}")
-print(f"FRONTEND_URL: {os.getenv('FRONTEND_URL', 'NOT SET')}")
-print(f"OPENAI_API_KEY: {'SET' if os.getenv('OPENAI_API_KEY') else 'NOT SET'}")
-print("="*50)
+CORS(app, supports_credentials=True, origins=["https://flashvocab.benclason.com"])
 
 try:
     client = OpenAI()  # Will automatically use OPENAI_API_KEY from environment
