@@ -1,50 +1,41 @@
 # Flash Vocab - Vocabulary Learning App
 
-A comprehensive vocabulary memorization app with AI-powered grouping, multiple learning modes, and progress tracking.
+A vocabulary memorization app with multiple learning modes, AI-powered grouping, and privacy-focused per-device data isolation.
 
-## 🌟 Features
+## Features
 
-- **Multiple Learning Modes**: Flashcards, Flash Quiz, Full Quiz, Multiple Choice
-- **AI-Powered Grouping**: Automatically sort vocabulary into optimal study groups using OpenAI
-- **Progress Tracking**: Track accuracy and performance over time  
+- **Multiple Learning Modes**: Flashcards, Flash Quiz, Full Quiz, Medley Mode
+- **Progress Tracking**: Track accuracy and performance over time 
+- **Starred Terms**: Focus on difficult vocabulary 
 - **Medley Mode**: Combined learning experience with chunked practice
-- **Starred Terms**: Focus on difficult vocabulary
-- **Bilingual Support**: Terms and translations with secondary definitions
-- **Drag & Drop Interface**: Manually organize vocabulary groups
 - **Smart Chunking**: Optimal 4-6 word groups for memory retention
+- **AI-Powered Grouping**: Automatically sort vocabulary into optimal study groups using OpenAI
+- **Device Isolation**: Automatic per-device data separation using secure cookie-based identification
 
-## 🚀 Live Demo
+## View Live App
 
-[View Live App](https://flash-vocab-delta.vercel.app)
+[flashvocab.benclason.com](https://flashvocab.benclason.com)
 
-## 🛠️ Tech Stack
+##  Tech Stack
 
 - **Frontend**: React 19, JavaScript, CSS, React Router
-- **Backend**: Python Flask, SQLite/PostgreSQL
+- **Backend**: Python Flask with individual SQLite databases per device
 - **AI Integration**: OpenAI GPT-4 API for intelligent word grouping
-- **UI Libraries**: @dnd-kit/core for drag-and-drop functionality
-- **Deployment**: Vercel (Frontend) + Railway (Backend)
+- **UI Libraries**: @dnd-kit/core for drag-and-drop functionality, @react-quizlet-flashcard for flashcards
+- **Data Isolation**: Cookie-based UUID system for per-device data separation
+- **Deployment**: Single-domain nginx setup serving React frontend and Flask API
+- **Security**: No user accounts required - privacy through device isolation
 
-## 📱 How It Works
-
-1. **Create Lists**: Add vocabulary terms with translations
-2. **AI Grouping**: Let AI automatically group similar terms for optimal learning
-3. **Practice Modes**: Choose from flashcards, quizzes, or combined medley mode  
-4. **Track Progress**: Monitor accuracy and focus on challenging terms
-5. **Chunked Learning**: Practice small groups for better retention
-
-## 🔧 Local Development
-
+##  Local Development
 ### Prerequisites
 - Node.js 14+
 - Python 3.8+
 - OpenAI API Key
-
 ### Setup
 1. Clone the repository
 ```bash
-git clone https://github.com/bclason/Flash-Vocab.git
-cd Flash-Vocab
+git clone https://github.com/bclason/flash-vocab.git
+cd flash-vocab
 ```
 
 2. Install frontend dependencies
@@ -55,6 +46,8 @@ npm install
 3. Install backend dependencies
 ```bash
 cd backend
+python3 -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
@@ -68,39 +61,25 @@ OPENAI_API_KEY=your_openai_api_key_here
 ```bash
 # Terminal 1: Start backend (port 5000)
 cd backend
-source venv/bin/activate  # or activate virtual environment
+source venv/bin/activate
 python app.py
 
 # Terminal 2: Start frontend (port 3000)
 npm start
 ```
 
-## 🌐 Deployment Instructions
+The app will automatically create individual database files for each device in `backend/databases/`.
 
-Ready to deploy? Follow these steps:
+### SSL Configuration
+SSL certificates are configured through Let's Encrypt for secure HTTPS access.
 
-### Frontend (Vercel)
-1. Connect GitHub repo to Vercel
-2. Set build command: `npm run build`
-3. Set output directory: `build`
-4. Add environment variable: `REACT_APP_API_BASE_URL=https://flash-vocab.up.railway.app`
-5. Deploy!
+## License
 
-### Backend (Railway)
-1. Connect GitHub repo to Railway
-2. Set environment variables:
-   - `OPENAI_API_KEY=your_openai_api_key`
-   - `FRONTEND_URL=https://flash-vocab-delta.vercel.app`
-   - `FLASK_ENV=production`
-3. Deploy Flask app
+MIT License - Feel free to use this webapp as inspiration for your own projects!
 
-## 📄 License
+## About the Developer
 
-MIT License - Feel free to use this project as inspiration for your own vocabulary apps!
-
-## 🤝 About the Developer
-
-Built by **Ben Clason** as a portfolio project demonstrating full-stack development with AI integration.
+Built by **Ben Clason** as a portfolio project demonstrating full-stack development with AI integration and privacy-focused architecture.
 
 - **LinkedIn**: [www.linkedin.com/in/benjamin-clason/](https://www.linkedin.com/in/benjamin-clason/)
 - **GitHub**: [www.github.com/bclason](https://github.com/bclason) 
